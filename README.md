@@ -12,7 +12,11 @@ cmake --build build
 or run `build.sh`
 
 ### Run
+Now we provide two options:
+1. basic-trace
+2. remove-specials (requires `simplify-cfg` pass) and draw new CFG
+
 ```bash
-/usr/local/bin/opt -load-pass-plugin ./build/lib/libBasicTrace.so -passes=basic-trace -disable-output _tanh.ll
+./run.sh 0 # to run basic-trace
+./run.sh 1 # to run remove-specials and simplify-cfg
 ```
-or run `run.sh`
