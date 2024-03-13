@@ -2,10 +2,15 @@
 # ======================================================
 set(LLVM_PLUGINS
     BasicTrace
+    RemoveSpecials
     )
 
 set(BasicTrace_SOURCES
-  BasicTrace.cpp)
+  BasicTrace.cpp
+  )
+set(RemoveSpecials_SOURCES
+  RemoveSpecials.cpp
+  )
 
 # CONFIGURE THE PLUGIN LIBRARIES
 # ==============================
