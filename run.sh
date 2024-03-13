@@ -12,4 +12,5 @@ fi
 if [ $1 -eq 1 ];then
     /usr/local/bin/opt -load-pass-plugin ./build/lib/libRemoveSpecials.so -passes=remove-specials,simplifycfg,dot-cfg -disable-output _tanh.ll
     dot -Tpng -o ./assets/_tanh_RemoveSpecials.png ./._tanh.dot
+    echo -e "\n[*] A new CFG is drawn at ./assets/_tanh_RemoveSpecials.png!"
 fi

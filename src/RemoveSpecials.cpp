@@ -50,7 +50,7 @@ bool RemoveSpecials::isSpecialBranch(llvm::BasicBlock* BB) {
     while(!insts.empty()) {
         Instruction* I = insts.top();
         insts.pop(); // remove top instruction
-        errs() << *I << "\n";
+        // errs() << *I << "\n";
 
         if (isValidSequence[0] == false && I->getOpcode()==Instruction::BitCast) {
             isValidSequence[0] = true;
@@ -68,11 +68,9 @@ bool RemoveSpecials::isSpecialBranch(llvm::BasicBlock* BB) {
 
 PreservedAnalyses RemoveSpecials::run(llvm::Function &Func,
                                       llvm::FunctionAnalysisManager &) {
-    errs() << "\n- Start of Function [" << Func.getName() << "]\n";
+    // errs() << "\n- Start of Function [" << Func.getName() << "]\n";
 
     for (auto &BB : Func) {
-      errs() << "    - [BB]\n";
-
       // We currently assume that only one BB holds INF/NaN branch among BBs.
       // Thus, since `isMergeable=true` occurs only once throughout BBs, we break the loop
       auto term = BB.getTerminator(); // check BB which contains conditional branch
@@ -81,7 +79,8 @@ PreservedAnalyses RemoveSpecials::run(llvm::Function &Func,
             bool isMergeable = isSpecialBranch(&BB); // check the branch's semantic
             if (isMergeable) {
                 // remove branch by setting the same successor on both True/False branch
-                errs() << "    - isMergeable = True\n";
+                // To remove other successors, apply simplify-cfg pass would be good choice :) 
+                errs() << "[*] BB    - isMergeable = True detected!\n\n";
                 brInst->setSuccessor(0, brInst->getSuccessor(1));
                 break;
             }
