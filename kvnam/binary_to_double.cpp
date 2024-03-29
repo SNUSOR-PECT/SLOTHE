@@ -3,6 +3,7 @@
 
 using namespace std;
 int main(){
+    
     //uint ix = 0;
     uint jx = 0x7FF00000;
     uint lx = 0x00077777;
@@ -19,6 +20,9 @@ int main(){
     //translate into the actual double precision 
     temp = sign * (1+mantissa*pow(2,-52))*pow(2,exponent);
     cout<<temp<<endl;
+    
+
+
 
 return 0;
 }

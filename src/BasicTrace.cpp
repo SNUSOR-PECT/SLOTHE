@@ -96,6 +96,9 @@ void BasicTrace::getConds(std::vector<BasicBlock*>& pathBB, std::vector<std::tup
     if (BranchInst *brInst = dyn_cast<BranchInst>(term)) {
       if (brInst->isConditional()) { // conditional branch
           Value* cond = brInst->getOperand(0);
+
+          errs() << brInst->getOpcodeName() <<  "   /   " << *brInst->getOperand(0) <<"\n" ;
+
           BasicBlock *ifTrueBB = brInst->getSuccessor(0); // Get the true branch successor
           bool ifTrue = (ifTrueBB == pathBB[i+1]); // is BB's condition true?
           condBB = std::make_tuple(BB, cond, ifTrue);
