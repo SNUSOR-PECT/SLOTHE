@@ -3,6 +3,7 @@
 set(LLVM_PLUGINS
     BasicTrace
     RemoveSpecials
+    FunctionalityCheck
     )
 
 set(BasicTrace_SOURCES
@@ -11,6 +12,9 @@ set(BasicTrace_SOURCES
 set(RemoveSpecials_SOURCES
   RemoveSpecials.cpp
   )
+# set(FunctionalityCheck_SOURCES
+#   FunctionalityCheck.cpp
+#   )
 
 # CONFIGURE THE PLUGIN LIBRARIES
 # ==============================

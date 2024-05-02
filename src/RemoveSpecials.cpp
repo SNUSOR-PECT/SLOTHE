@@ -90,8 +90,10 @@ bool RemoveSpecials::isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *b
 
   // First, check if the intermediate is subNormal
   uint32_t opI = getConstantVal(getOperandFromCondition(Cond, 1));
-  uint32_t opT = 0x3c800000; // subnormal value in ieee-754 representation
-  if (!(opI == opT))
+  uint32_t opT1 = 0x3c800000; // subnormal value in ieee-754 representation. 2**-55
+  uint32_t opT2 = 0x3c900000; // subnormal value in ieee-754 representation. 2**-54
+
+  if (!((opI == opT1) || (opI == opT2)))
     return false;
 
   // Then check if the other operand is high word of the input 
@@ -107,15 +109,16 @@ PreservedAnalyses RemoveSpecials::run(llvm::Function &Func,
   
   for (auto &BB : Func) {
     auto term = BB.getTerminator(); // check BB which contains conditional branch
+    // errs() << *term << "\n";
     BranchInst *brInst = dyn_cast<BranchInst>(term);
 
     if ( brInst && (brInst->isConditional())) {
       if (!specialFound) {
-        bool isMergeable = isSpecialBranch(&BB, brInst); // check the branch's semantic
-          if (isMergeable) {
+        bool isSpecials = isSpecialBranch(&BB, brInst); // check the branch's semantic
+          if (isSpecials) {
               // remove branch by setting the same successor on both True/False branch
               // To remove other successors, apply simplify-cfg pass would be good choice :) 
-              errs() << "[*] BB    - isMergeable = True detected!\n";
+              errs() << "[*] BB    - isSpecials = True detected!\n";
               brInst->setSuccessor(0, brInst->getSuccessor(1));
               specialFound = true;
           }
