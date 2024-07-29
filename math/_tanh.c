@@ -1,3 +1,5 @@
+// ref: https://github.com/lattera/glibc/blob/master/sysdeps/ieee754/dbl-64/s_tanh.c
+
 #include <stdlib.h>
 #include <math.h>
 
