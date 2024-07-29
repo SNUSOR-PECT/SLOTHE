@@ -3,7 +3,7 @@
 set(LLVM_PLUGINS
     BasicTrace
     RemoveSpecials
-    FunctionalityCheck
+    # FunctionalityCheck
     )
 
 set(BasicTrace_SOURCES
