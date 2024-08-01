@@ -47,7 +47,7 @@ double _acosh (double x) {
         return log(2.0*x - one / (x + sqrt(t-one)));
     } else {                                        /* 1<x<2 */
         t = x - one;
-        return __log1p(t + sqrt(2.0*t + t*t));
+        return log1p(t + sqrt(2.0*t + t*t));
     }
 }
 

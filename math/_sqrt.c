@@ -3,6 +3,7 @@
 #include <math.h>
 
 // root.tbl
+// tables for the usqrt() function
 static const double inroot[128] = {
   1.40872145012100,  1.39792649065766,  1.38737595123859,  1.37706074531819,
   1.36697225234682,  1.35710228748795,  1.34744307370643,  1.33798721601135,
@@ -91,19 +92,16 @@ double _sqrt (double x) {
             ret = res * c.x;
         }
 
-        double dret = x / ret;
+        return ret;
 
-        if (dret != ret) {
-            return ret;
-        } else {
-            if ((k & 0x7ff00000) == 0x7ff00000)
-                return x * x + x; /* sqrt(NaN)=NaN, sqrt(+inf)=+inf, sqrt(-inf)=sNaN */
-            if (x == 0)
-                return x;       /* sqrt(+0)=+0, sqrt(-0)=-0 */
-            if (k < 0)
-                return (x - x) / (x - x); /* sqrt(-ve)=sNaN */
-            return 0x1p-256 * _sqrt (x * 0x1p512);
-        }
+    } else {
+        if ((k & 0x7ff00000) == 0x7ff00000)
+            return x * x + x; /* sqrt(NaN)=NaN, sqrt(+inf)=+inf, sqrt(-inf)=sNaN */
+        if (x == 0)
+            return x;       /* sqrt(+0)=+0, sqrt(-0)=-0 */
+        if (k < 0)
+            return (x - x) / (x - x); /* sqrt(-ve)=sNaN */
+        return 0x1p-256 * _sqrt (x * 0x1p512);
     }
 }
 
