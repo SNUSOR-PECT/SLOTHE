@@ -6,42 +6,22 @@
 #include <vector>
 #include <algorithm>
 
+#include "main.hpp"
+#include "_erf.hpp"
+
 using namespace std;
-
-typedef union v64_union {
-	double f;
-	uint64_t u;
-} v64;
-
-void printBinary(double d) {
-	v64 v; v.f = d;
-	uint64_t mask = 1ULL << 63;
-	int count = 63;
-	do {
-		if (mask == 0x4000000000000000 || mask == 0x8000000000000) putchar(' ');
-		putchar(v.u & mask ? '1' : '0');
-		count--;
-	} while (mask >>= 1);
-}
-
-//////////////////////////
-// Code for Code Approx //
-//////////////////////////
-
-void getParts(std::vector<double>& parts, int d, double begin, double end) {
-	int sz = pow(2, d) + 1;
-	parts.resize(sz);
-	double gap = (end - begin) / (sz-1);
-	for (int i=0; i<sz; i++) {parts[i] = begin + gap*i;}
-}
-
-double delta = 1e-6; // (~2^-20) for derivative
 
 /*
  * functions for branch
 */
-double g(double x) { return 1 - 2/(exp(2*abs(x))+1);}
-double h(double x) { return - (exp(-2*abs(x))-1) / (exp(-2*abs(x))-1+2);}
+double g(double x) {return _erf1(x);}
+double h(double x) {return _erf2(x);}
+
+// double g(double x) { double t = x*x; return log(2.0*x - 1 / (x + sqrt(t-1)));}
+// double h(double x) { double t = x-1; return log1p(t+sqrt(2*t+t*t));}
+
+// double g(double x) { return 1 - 2/(exp(2*abs(x))+1);}
+// double h(double x) { return - (exp(-2*abs(x))-1) / (exp(-2*abs(x))-1+2);}
 
 //double g(double x) { return x>0? x:0;} // ReLU
 //double h(double x) { return log(1+exp(x));}
@@ -260,8 +240,13 @@ int main(void) {
 	// begin = 1.0, end = 5.01; // range of input parts
 	// begin = -4.0, end = 4.0;
 
-	gbegin = 1.0, gend = 22.0;
-	hbegin = 0.0, hend = 1.0;
+	/*
+	 * 1/0.35 = 2.85714
+	*/
+
+	gbegin = 0.0, gend = 0.84375;
+	hbegin = 0.84375, hend = 1.25;
+
 	// gbegin = -22.0, gend = -1.0;
 	// hbegin = -1.0, hend = 0.0;
 	// gbegin = -60.0, gend = -34.0437;
