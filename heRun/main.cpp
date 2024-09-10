@@ -1,0 +1,177 @@
+#include "main.hpp"
+
+int main(void) {
+    std::cout << "set chrono timer ...\n";
+    // Timer setting
+    std::chrono::high_resolution_clock::time_point time_start, time_end;
+    std::chrono::microseconds time_diff;
+
+
+    ////////////////////////////////////////////
+    ///////      Select NAAF to run      ///////
+    ////////////////////////////////////////////
+
+    std::cout << "\n========================= NAAF =========================\n";
+    std::cout << "+---------------------------------------+" << std::endl;
+    std::cout << "| sample of non-arithmetic activations  |" << std::endl;
+    std::cout << "+---------------------------------------+" << std::endl;
+    std::cout << "| Examples                              |" << std::endl;
+    std::cout << "+-------------------+-------------------+" << std::endl;
+    std::cout << "| 1. ReLU           | naafs.cpp:num     |" << std::endl;
+    std::cout << "| 2. Swish          | naafs.cpp:num     |" << std::endl;
+    std::cout << "| 3. Tanh           | naafs.cpp:num     |" << std::endl;
+    std::cout << "| 4. Sigmoid        | naafs.cpp:num     |" << std::endl;
+    std::cout << "| 5. GeLU           | naafs.cpp:num     |" << std::endl;
+    std::cout << "| 6. Softplus       | naafs.cpp:num     |" << std::endl;
+    std::cout << "| 7. Inv(temp)      | naafs.cpp:num     |" << std::endl;
+    std::cout << "+-------------------+-------------------+" << std::endl;
+
+    int sel = 0; // naaf
+    bool valid = true;
+    do {
+        std::cout << "[*] select NAAF option or exit(0) : ";
+        if (!(std::cin >> sel)) valid = false;
+        else if (sel < 0 || sel > 8) valid = false;
+        else valid = true;
+
+        if (!valid) {
+            std::cout << "[**] valid option : type 1 ~ 7\n";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+    } while (!valid);
+    if (sel == 0 ) return 0;
+
+    int alpha = 0; // precision alpha
+    valid = true;
+    do {
+        std::cout << "[*] select alpha option(0-25) or exit(-1) : ";
+        if (!(std::cin >> alpha)) valid = false;
+        else if (alpha < 0 || alpha > 25) valid = false;
+        else valid = true;
+
+        if (!valid) {
+            std::cout << "[**] valid option : type 0 ~ 25\n";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+    } while (!valid);
+    if (alpha == -1 ) return 0;
+    double epsilon = std::pow(2, -alpha);
+
+    long level = 0;
+    std::vector<double> K;  // for inverse (To be removed)
+    double normN = 100.0;   // for inverse (To be removed)
+
+
+    if (sel == 1) {         // 1. ReLU 
+
+    } else if (sel == 2) {  // 2. Swish
+
+    } else if (sel == 3) {  // 3. Tanh
+        
+    } else if (sel == 4) {  // 4. Sigmoid
+        
+    } else if (sel == 5) {  // 5. GeLU
+        
+    } else if (sel == 6) {  // 6. Softplus
+        
+    } else if (sel == 7) {  // 7. Inverse (Inner)
+        std::function<double(double)> f_inv = [](double z) -> double {
+            return z * (2 - z);
+        };
+
+        getRelaxationFactor(f_inv, alpha, epsilon, K);
+        level = K.size() * 2 + 2; // 2 for normalization
+    }
+
+    std::cout << "set HE parameters ...\n";
+
+    // SEAL setting
+    long scalingfactor = 40;
+    long log_modulus = scalingfactor;
+    EncryptionParameters parms(scheme_type::ckks);
+    size_t poly_modulus_degree = 65536;
+    long n = poly_modulus_degree / 2;
+    parms.set_poly_modulus_degree(poly_modulus_degree);
+    std::vector<int> modulus_list;
+    modulus_list.emplace_back(60);  for(int i=0; i<level; i++) modulus_list.emplace_back(log_modulus);   modulus_list.emplace_back(60);
+    parms.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, modulus_list));
+    SEALContext context(parms);
+
+    // Key generation
+    KeyGenerator keygen(context);
+    PublicKey pk;
+    keygen.create_public_key(pk);
+    auto sk = keygen.secret_key();
+    RelinKeys rlks;
+    keygen.create_relin_keys(rlks);
+
+    // Evaluator, Encryptor, Decryptor, Encoder
+    CKKSEncoder encoder(context);
+    Encryptor encryptor(context, pk);
+    Evaluator evaluator(context, encoder);
+    Decryptor decryptor(context, sk);
+
+    // Generate input vector
+    std::cout << "generate input vector ...\n";
+    std::vector<double> m_x(n), output(n);
+    for (int i=0; i<n; i++) m_x[i] = (0.05 + 0.95 * static_cast<double>(i+1) / static_cast<double>(n)) * normN;
+
+    // Encode & Encrypt
+    std::cout << "encode and encrypt input vector ...\n";
+    Plaintext ptxt;
+    double scale = std::pow(2.0, log_modulus);
+    encoder.encode(m_x, scale, ptxt);
+
+    Ciphertext ctxt, ctxt_res;
+    encryptor.encrypt(ptxt, ctxt);
+    std::cout << "initial level : " << context.get_context_data(ctxt.parms_id())->chain_index() << std::endl;
+    // std::std::cout << "Input : \n";
+    // decrypt_and_print_part(ctxt, decryptor, encoder, n, 0, 5);
+
+    std::cout << "run naaf ...\n";
+    if (sel == 1) {         // 1. ReLU 
+
+    } else if (sel == 2) {  // 2. Swish
+
+    } else if (sel == 3) {  // 3. Tanh
+        
+    } else if (sel == 4) {  // 4. Sigmoid
+        
+    } else if (sel == 5) {  // 5. GeLU
+        
+    } else if (sel == 6) {  // 6. Softplus
+        
+    } else if (sel == 7) {  // 7. Inverse (Inner)
+        // for normalization
+		std::vector<double> n_x_inv(n, 1/normN);
+
+		// normalization
+		evaluator.multiply_vector_reduced_error(ctxt, n_x_inv, ctxt);
+		evaluator.rescale_to_next_inplace(ctxt);
+
+
+		std::cout << "\nApproximated Inverse ..." << std::endl;
+		time_start = std::chrono::high_resolution_clock::now();
+		Inv(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res);
+		time_end = std::chrono::high_resolution_clock::now();
+		time_diff = std::chrono::duration_cast<std::chrono::milliseconds>(time_end - time_start);
+
+		// normalization back
+		evaluator.multiply_vector_reduced_error(ctxt_res, n_x_inv, ctxt_res);
+		evaluator.rescale_to_next_inplace(ctxt_res);
+    }
+
+    // result
+    std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
+    // std::cout << "Expected output : \n";
+    // print_part(output, n, 0, 5);
+    // decrypt_and_print_part(ctxt_res, decryptor, encoder, n, 0, 5);
+    ShowFailure_Inverse(decryptor, encoder, ctxt_res, m_x, alpha, n);
+    std::cout << "Inverse function time : " << time_diff.count() / 1000.0 << " ms" << std::endl;
+    std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
+
+
+    return 0;
+}
