@@ -4,6 +4,7 @@
 #include <iostream>
 #include <chrono>
 #include <vector>
+#include <stack>
 #include <cmath>
 
 #include "NTL/RR.h"
@@ -19,10 +20,10 @@ class Timer {
         void end(void);
 
     public:
-        std::chrono::high_resolution_clock::time_point t_start;
-        std::chrono::high_resolution_clock::time_point t_end;
+        std::stack<high_resolution_clock::time_point> t_starts;
+        high_resolution_clock::time_point t_start, t_end;
     private:
-        std::chrono::milliseconds t_diff;
+        milliseconds t_diff;
 };
 
 long ShowFailure_Inverse(Decryptor &decryptor, CKKSEncoder &encoder, Ciphertext& cipher, std::vector<double>& x, long alpha, long n);

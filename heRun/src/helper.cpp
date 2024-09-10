@@ -2,10 +2,14 @@
 
 void Timer::start(void) {
     t_start = high_resolution_clock::now();
+    t_starts.push(t_start);
 }
 void Timer::end(void) {
     t_end = high_resolution_clock::now();
+    t_start = t_starts.top();
     t_diff = duration_cast<milliseconds>(t_end - t_start);
+
+    t_starts.pop();
 
     std::cout << "[*] time : " << t_diff.count() << " ms" << std::endl;
 }
