@@ -61,13 +61,19 @@ int main(void) {
     std::vector<double> K;  // for inverse (To be removed)
     double normN = 100.0;   // for inverse (To be removed)
 
+    std::function<double(double)> f_inv = [](double z) -> double {
+        return z * (2 - z);
+    }; // for inverse (To be removed)
+
+    getRelaxationFactor(f_inv, alpha, epsilon, K); // for inverse (To be removed)
+
 
     if (sel == 1) {         // 1. ReLU 
 
     } else if (sel == 2) {  // 2. Swish
 
     } else if (sel == 3) {  // 3. Tanh
-        
+        level = K.size() * 2 + 2; // 2 for normalization
     } else if (sel == 4) {  // 4. Sigmoid
         
     } else if (sel == 5) {  // 5. GeLU
@@ -75,13 +81,16 @@ int main(void) {
     } else if (sel == 6) {  // 6. Softplus
         
     } else if (sel == 7) {  // 7. Inverse (Inner)
-        std::function<double(double)> f_inv = [](double z) -> double {
-            return z * (2 - z);
-        };
+        // std::function<double(double)> f_inv = [](double z) -> double {
+        //     return z * (2 - z);
+        // };
 
-        getRelaxationFactor(f_inv, alpha, epsilon, K);
+        // getRelaxationFactor(f_inv, alpha, epsilon, K);
         level = K.size() * 2 + 2; // 2 for normalization
     }
+
+    level = 10; // for dev
+    
 
     std::cout << "set HE parameters ...\n";
 
@@ -114,7 +123,8 @@ int main(void) {
     // Generate input vector
     std::cout << "generate input vector ...\n";
     std::vector<double> m_x(n), output(n);
-    for (int i=0; i<n; i++) m_x[i] = (0.05 + 0.95 * static_cast<double>(i+1) / static_cast<double>(n)) * normN;
+    // for (int i=0; i<n; i++) m_x[i] = (0.05 + 0.95 * static_cast<double>(i+1) / static_cast<double>(n));
+    for (int i=0; i<n; i++) m_x[i] = (-8.0 + 16.0 * static_cast<double>(i+1) / static_cast<double>(n+1));
 
     // Encode & Encrypt
     std::cout << "encode and encrypt input vector ...\n";
@@ -126,7 +136,7 @@ int main(void) {
     encryptor.encrypt(ptxt, ctxt);
     std::cout << "initial level : " << context.get_context_data(ctxt.parms_id())->chain_index() << std::endl;
     // std::std::cout << "Input : \n";
-    // decrypt_and_print_part(ctxt, decryptor, encoder, n, 0, 5);
+    decrypt_and_print_part(ctxt, decryptor, encoder, n, 0, 3);
 
     std::cout << "run naaf ...\n";
     if (sel == 1) {         // 1. ReLU 
@@ -134,7 +144,7 @@ int main(void) {
     } else if (sel == 2) {  // 2. Swish
 
     } else if (sel == 3) {  // 3. Tanh
-        
+        Expm1(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
     } else if (sel == 4) {  // 4. Sigmoid
         
     } else if (sel == 5) {  // 5. GeLU
@@ -152,7 +162,7 @@ int main(void) {
 
 		std::cout << "\nApproximated Inverse ..." << std::endl;
         timer.start();
-		Inv(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res);
+		Inv(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
         timer.end();
 
 		// normalization back
@@ -164,8 +174,8 @@ int main(void) {
     std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
     // std::cout << "Expected output : \n";
     // print_part(output, n, 0, 5);
-    // decrypt_and_print_part(ctxt_res, decryptor, encoder, n, 0, 5);
-    ShowFailure_Inverse(decryptor, encoder, ctxt_res, m_x, alpha, n);
+    decrypt_and_print_part(ctxt_res, decryptor, encoder, n, 0, 3);
+    ShowFailure_Expm1(decryptor, encoder, ctxt_res, m_x, alpha, n);
     std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
 
 
