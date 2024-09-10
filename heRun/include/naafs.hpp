@@ -17,7 +17,7 @@ using namespace NTL;
 // Non-Arithmetic Activation Functions
 // void ReLU(double x);      // return max(x, 0)
 // void Swish(double x);     // return x * sigmoid(x)
-// void Tanh(double x);      // return tanh(x)
+void Tanh(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out);      // return tanh(x)
 // void Sigmoid(double x);   // return 1 / {exp(-x)+1}
 // void GeLU(double x);      // return x/2 * (1 + erf(x/sqrt(2)))
 // void Softplus(double x);  // return  log(1 + exp(x))

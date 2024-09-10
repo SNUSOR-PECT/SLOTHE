@@ -1,11 +1,9 @@
 #include "main.hpp"
 
 int main(void) {
-    std::cout << "set chrono timer ...\n";
     // Timer setting
-    std::chrono::high_resolution_clock::time_point time_start, time_end;
-    std::chrono::microseconds time_diff;
-
+    std::cout << "set chrono timer ...\n";
+    Timer timer;
 
     ////////////////////////////////////////////
     ///////      Select NAAF to run      ///////
@@ -153,10 +151,9 @@ int main(void) {
 
 
 		std::cout << "\nApproximated Inverse ..." << std::endl;
-		time_start = std::chrono::high_resolution_clock::now();
+        timer.start();
 		Inv(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res);
-		time_end = std::chrono::high_resolution_clock::now();
-		time_diff = std::chrono::duration_cast<std::chrono::milliseconds>(time_end - time_start);
+        timer.end();
 
 		// normalization back
 		evaluator.multiply_vector_reduced_error(ctxt_res, n_x_inv, ctxt_res);
@@ -169,7 +166,6 @@ int main(void) {
     // print_part(output, n, 0, 5);
     // decrypt_and_print_part(ctxt_res, decryptor, encoder, n, 0, 5);
     ShowFailure_Inverse(decryptor, encoder, ctxt_res, m_x, alpha, n);
-    std::cout << "Inverse function time : " << time_diff.count() / 1000.0 << " ms" << std::endl;
     std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
 
 
