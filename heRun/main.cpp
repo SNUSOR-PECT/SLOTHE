@@ -89,7 +89,7 @@ int main(void) {
         level = K.size() * 2 + 2; // 2 for normalization
     }
 
-    level = 10; // for dev
+    level = 5; // for dev
     
 
     std::cout << "set HE parameters ...\n";
@@ -120,10 +120,12 @@ int main(void) {
     Evaluator evaluator(context, encoder);
     Decryptor decryptor(context, sk);
 
+    // Check plaintext/ciphertext precision
+    checkPrecision(n, log_modulus, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks);
+
     // Generate input vector
     std::cout << "generate input vector ...\n";
     std::vector<double> m_x(n), output(n);
-    // for (int i=0; i<n; i++) m_x[i] = (0.05 + 0.95 * static_cast<double>(i+1) / static_cast<double>(n));
     for (int i=0; i<n; i++) m_x[i] = (-8.0 + 16.0 * static_cast<double>(i+1) / static_cast<double>(n+1));
 
     // Encode & Encrypt
@@ -135,7 +137,7 @@ int main(void) {
     Ciphertext ctxt, ctxt_res;
     encryptor.encrypt(ptxt, ctxt);
     std::cout << "initial level : " << context.get_context_data(ctxt.parms_id())->chain_index() << std::endl;
-    // std::std::cout << "Input : \n";
+    std::cout << "Input : ";
     decrypt_and_print_part(ctxt, decryptor, encoder, n, 0, 3);
 
     std::cout << "run naaf ...\n";
@@ -144,10 +146,25 @@ int main(void) {
     } else if (sel == 2) {  // 2. Swish
 
     } else if (sel == 3) {  // 3. Tanh
-        Expm1(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+        std::cout << "\nApproximated Tanh ..." << std::endl;
+
+        timer.start();
+        Tanh_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+        timer.end();
+
     } else if (sel == 4) {  // 4. Sigmoid
-        
+        std::cout << "\nApproximated Sigmoid ..." << std::endl;
+
+        timer.start();
+        Sigmoid_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+        timer.end();
+
     } else if (sel == 5) {  // 5. GeLU
+        std::cout << "\nApproximated GeLU ..." << std::endl;
+
+        timer.start();
+        GeLU_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+        timer.end();
         
     } else if (sel == 6) {  // 6. Softplus
         
@@ -162,7 +179,7 @@ int main(void) {
 
 		std::cout << "\nApproximated Inverse ..." << std::endl;
         timer.start();
-		Inv(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+		Inv_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
         timer.end();
 
 		// normalization back
@@ -172,10 +189,10 @@ int main(void) {
 
     // result
     std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
-    // std::cout << "Expected output : \n";
+    // std::cout << "Expected output : ";
     // print_part(output, n, 0, 5);
     decrypt_and_print_part(ctxt_res, decryptor, encoder, n, 0, 3);
-    ShowFailure_Expm1(decryptor, encoder, ctxt_res, m_x, alpha, n);
+    ShowFailure_GeLU(decryptor, encoder, ctxt_res, m_x, alpha, n);
     std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
 
 

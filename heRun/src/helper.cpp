@@ -62,8 +62,68 @@ long ShowFailure_Tanh(Decryptor &decryptor, CKKSEncoder &encoder, Ciphertext& ct
 
     double max_err = -1.0;
     for (int i = 0; i < n; ++i) {
-            if(abs(tanh(x[i]) - output[i]) > bound) failure++;
-            max_err = max_err > abs(tanh(x[i]) - output[i]) ? max_err : abs(tanh(x[i]) - output[i]);
+        if(abs(tanh(x[i]) - output[i]) > bound) failure++;
+        max_err = max_err > abs(tanh(x[i]) - output[i]) ? max_err : abs(tanh(x[i]) - output[i]);
+    }
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "failure : " << failure << std::endl;
+    std::cout << "max_err : " << max_err << std::endl;
+    std::cout << "-------------------------------------------------" << std::endl;
+    return failure;
+}
+
+long ShowFailure_Sigmoid(Decryptor &decryptor, CKKSEncoder &encoder, Ciphertext& ctxt, std::vector<double>& x, long alpha, long n) {
+    long failure = 0;
+    double bound = pow(2.0, static_cast<double>(-alpha));
+    Plaintext pout;
+    std::vector<double> output;
+    decryptor.decrypt(ctxt, pout);
+    encoder.decode(pout, output);
+
+    double max_err = -1.0;
+    for (int i = 0; i < n; ++i) {
+            if(abs(Sigmoid(x[i]) - output[i]) > bound) failure++;
+            max_err = max_err > abs(Sigmoid(x[i]) - output[i]) ? max_err : abs(Sigmoid(x[i]) - output[i]);
+    }
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "failure : " << failure << std::endl;
+    std::cout << "max_err : " << max_err << std::endl;
+    std::cout << "-------------------------------------------------" << std::endl;
+    return failure;
+}
+
+long ShowFailure_GeLU(Decryptor &decryptor, CKKSEncoder &encoder, Ciphertext& ctxt, std::vector<double>& x, long alpha, long n) {
+    long failure = 0;
+    double bound = pow(2.0, static_cast<double>(-alpha));
+    Plaintext pout;
+    std::vector<double> output;
+    decryptor.decrypt(ctxt, pout);
+    encoder.decode(pout, output);
+
+    double max_err = -1.0;
+    for (int i = 0; i < n; ++i) {
+            if(abs(GeLU(x[i]) - output[i]) > bound) failure++;
+            max_err = max_err > abs(GeLU(x[i]) - output[i]) ? max_err : abs(GeLU(x[i]) - output[i]);
+    }
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "failure : " << failure << std::endl;
+    std::cout << "max_err : " << max_err << std::endl;
+    std::cout << "-------------------------------------------------" << std::endl;
+    return failure;
+}
+
+long ShowFailure_Softplus(Decryptor &decryptor, CKKSEncoder &encoder, Ciphertext& ctxt, std::vector<double>& x, long alpha, long n) {
+    long failure = 0;
+    double bound = pow(2.0, static_cast<double>(-alpha));
+    Plaintext pout;
+    std::vector<double> output;
+    decryptor.decrypt(ctxt, pout);
+    encoder.decode(pout, output);
+
+    double max_err = -1.0;
+    for (int i = 0; i < n; ++i) {
+            if(abs(Softplus(x[i]) - output[i]) > bound) failure++;
+            max_err = max_err > abs(Softplus(x[i]) - output[i]) ? max_err : abs(Softplus(x[i]) - output[i]);
     }
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "failure : " << failure << std::endl;
@@ -122,8 +182,8 @@ long ShowFailure_Inverse(Decryptor &decryptor, CKKSEncoder &encoder, Ciphertext&
 
     double max_err = -1.0;
     for (int i = 0; i < n; ++i) {
-            if(abs(1/x[i] - output[i]) > bound) failure++;
-            max_err = max_err > abs(exp(x[i]) - output[i]) ? max_err : abs(exp(x[i]) - output[i]);
+        if(abs(1/x[i] - output[i]) > bound) failure++;
+        max_err = max_err > abs(1/x[i] - output[i]) ? max_err : abs(1/x[i] - output[i]);
     }
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "failure : " << failure << std::endl;
