@@ -28,7 +28,9 @@ class Timer {
         milliseconds t_diff;
 };
 
+// Util functions
 void checkPrecision(long n, long log_modulus, SEALContext& context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks);
+void reEncrypt(long n, SEALContext& context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out);
 
 // Check failure under given alpha (precision)
 long ShowFailure_Tanh(Decryptor &decryptor, CKKSEncoder &encoder, Ciphertext& cipher, std::vector<double>& x, long alpha, long n);
