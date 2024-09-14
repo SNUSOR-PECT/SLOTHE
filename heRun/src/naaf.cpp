@@ -16,17 +16,59 @@ void Tanh_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& en
 
 	std::vector<double> coeffs;
 
-	// tanh(x) for input range {-8, 8}, deg = 3
-	// Estimated max error: 3.694283658858717e-1
-	coeffs = { 0.0, 0.39828491779402708, -0.0049916170572429936 };
-	// tanh(x) for input range {-8, 8}, deg = 5
-	// Estimated max error: 2.3948370323248433e-1
-	coeffs = { 0.0, 0.54432569591496227, -0.017848386208625704, 0.00018381505278499826 };
-	// tanh(x) for input range {-8, 8}, deg = 9
+	// tanh(x) for input range {-4, 4}, deg = 3
+	// Estimated max error: 1.789207510168448e-1
+	coeffs = { 0.0, 0.62332351004520858, -0.026138835804040812 };
+	// tanh(x) for input range {-4, 4}, deg = 5
+	// Estimated max error: 8.1706630221135251e-2
+	coeffs = { 0.0, 0.786385891351014, -0.077138167574924602, 0.0028050147356946491 };
+	// tanh(x) for input range {-4, 4}, deg = 7
+	// Estimated max error: 3.7784620234726626e-2
+	coeffs = { 0.0, 0.88222902467195541, -0.13688849446536952, 0.011159724738052965, -0.00031946203034460873 };
+	// tanh(x) for input range {-4, 4}, deg = 9
 	// Estimated max error: 1.7532633168081485e-2
-	coeffs = { 0.0, 0.74192320497372455, -0.063803740971915657, 0.0026722733788654965, -4.7969048289304421e-05, 3.0452150809489182e-07 };
+	coeffs = { 0.0, 0.93657377120439311, -0.19241024637097784, 0.025186659290744155, -0.0015796948113737689, 3.6908734480506796e-05 };
+	// tanh(x) for input range {-4, 4}, deg = 11
+	// Estimated max error: 8.1431912744971558e-3
+	coeffs = { 0.0, 0.96646785974779381, -0.23741387595641772, 0.042846720971703278, -0.0043070605315796151, 0.00021730961122456692, -4.2807508754235473e-06 };
+	// tanh(x) for input range {-4, 4}, deg = 13
+	// Estimated max error: 3.783216478934053e-3
+	coeffs = { 0.0, 0.98252959106739335, -0.27072421260223462, 0.061452695943391832, -0.0086191833740324499, 0.00069358272749582746, -2.9202772402216391e-05, 4.9703177949257924e-07 };
+	// tanh(x) for input range {-4, 4}, deg = 15
+	// Estimated max error: 1.7577702922961753e-3
+	coeffs = { 0.0, 0.99100392699616702, -0.29383017851338983, 0.078798779536478181, -0.014198267091101651, 0.0015980123896941422, -0.00010675175571847973, 3.8534061756133606e-06, -5.7727666405365866e-08 };
+	// tanh(x) for input range {-4, 4}, deg = 17
+	// Estimated max error: 8.167196400045807e-4
+	coeffs = { 0.0, 0.99541175580410124, -0.30909547814177113, 0.093585182898206318, -0.020466617561347263, 0.00298367668408747, -0.00027848786902639751, 1.5872708915911474e-05, -5.0123093812338259e-07, 6.7053737914188064e-09 };
+	// tanh(x) for input range {-4, 4}, deg = 19
+	// Estimated max error: 3.7947814019801303e-4
+	coeffs = { 0.0, 0.99767839249907575, -0.31880495482725274, 0.10535423679882261, -0.0268047399648969, 0.0048042004261275089, -0.00058229149586322589, 4.6265833340040046e-05, -2.2970427564201655e-06, 6.4453036567128196e-08, -7.788849575878072e-10 };
+	// // tanh(x) for input range {-4, 4}, deg = 21 ------> scalingfactor >= 45
+	// // Estimated max error: 1.763199136017716e-4
+	// coeffs = { 0.0, 0.99883313321301748, -0.32479544985518882, 0.11422658006526534, -0.032708425022993169, 0.0069330505217938534, -0.0010390032560081844, 0.0001072041365415903, -7.4005373001906433e-06, 3.2526885257103384e-07, -8.2106040366209758e-09, 9.0474652911861078e-11 };
+	// // tanh(x) for input range {-4, 4}, deg = 23 ------> scalingfactor >= 50
+	// // Estimated max error: 8.1924954349264908e-5
+	// coeffs = { 0.0, 0.99941686671499574, -0.32840024803104267, 0.12062648996143112, -0.037856858558370121, 0.0092040787825085867, -0.0016451128737233391, 0.00021032249179001481, -1.8833955800622345e-05, 1.1479907181724712e-06, -4.5244789363000279e-08, 1.0378149603070405e-09, -1.0509486286423538e-11 };
+
+	bool valid = true;
+	double norm = 0.0;
+	double bound = 1e-08;
+	for (size_t i=coeffs.size()-1; i>=0; i--) {
+		if (abs(coeffs[i]) < bound) {
+			valid = false;
+			norm = floor(bound / pow(10, floor(log10(abs(coeffs[i])))));
+			for (size_t j=0; j<coeffs.size(); j++) coeffs[j] *= norm;
+			break;
+			}
+	}
+	std::vector<double> norms(n, 1/norm);
 
 	evalPolyOdd(coeffs, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+
+	if (!valid) {
+		evaluator.multiply_vector_reduced_error(ctxt_temp, norms, ctxt_temp);
+		evaluator.rescale_to_next_inplace(ctxt_temp);
+	}
 
 	ctxt_out = ctxt_temp;
 }
@@ -50,13 +92,25 @@ void Tanh_LA(std::vector<double>& K, long n, SEALContext &context, Encryptor& en
 	decryptor.decrypt(ctxt_in, ptxt_decrypted);
 	encoder.decode(ptxt_decrypted, decoded);
 
+	// Expm1(2x)+2
+	evaluator.multiply_vector_reduced_error(ctxt_in, twos, ctxt_temp);
+	evaluator.rescale_to_next_inplace(ctxt_temp);
+	Expm1_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	evaluator.add_reduced_error(ctxt_temp, cTwo, ctxt_temp);
+
 	// after expm1(x) + 2, always positive -> just normalize
 	for (long i=0; i<n; i++) decoded[i] = expm1(2*decoded[i]) + 2;
 
-	encoder.encode(decoded, ctxt_in.scale(), ptxt_decrypted);
-	encryptor.encrypt(ptxt_decrypted, ctxt_temp);
+	// encoder.encode(decoded, ctxt_in.scale(), ptxt_decrypted);
+	// encryptor.encrypt(ptxt_decrypted, ctxt_temp);
+
+	std::cout << "\n check 1 : expm1(2*decoded[i]) + 2 \n";
+	std::cout << "plain : "; print_part(decoded, n, 0, 3);
+	std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+
 	
-	double normN = 1e+07; // for [-8, 8]
+	// double normN = 1e+07; // for x in [-8, 8]
+	double normN = 1e+04; // for x in [-4, 4]
 	std::vector<double> n_inv(n, 1/normN);
 
 	// normalization
@@ -65,16 +119,19 @@ void Tanh_LA(std::vector<double>& K, long n, SEALContext &context, Encryptor& en
 
 	std::cout << "\n check 2 : t = t * (1/normN) \n";
 	for (long i=0; i<n; i++) decoded[i] *= n_inv[i];
-	print_part(decoded, n, 0, 3);
-	decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+	std::cout << "plain : "; print_part(decoded, n, 0, 3);
+	std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
 
+	reEncrypt(n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp);
 	// inverse
-	Inv_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	// Inv_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	Inv_NA2(17, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	reEncrypt(n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp);
 
-	std::cout << "\n check 3 : \n";
+	std::cout << "\n check 3 : Inverse(t)\n";
 	for (long i=0; i<n; i++) decoded[i] = 1 / decoded[i];
-	print_part(decoded, n, 0, 3);
-	decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+	std::cout << "plain : "; print_part(decoded, n, 0, 3);
+	std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
 
 	// normalization back and multiply -2
 	for (long i=0; i<n; i++) n_inv[i] = -2.0 * n_inv[i];
@@ -82,17 +139,17 @@ void Tanh_LA(std::vector<double>& K, long n, SEALContext &context, Encryptor& en
 	evaluator.rescale_to_next_inplace(ctxt_temp);
 
 	std::cout << "\n check 4 : \n";
-	for (long i=0; i<n; i++) decoded[i] *= (-2.0 * n_inv[i]);
-	print_part(decoded, n, 0, 3);
-	decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+	for (long i=0; i<n; i++) decoded[i] *= n_inv[i];
+	std::cout << "plain : "; print_part(decoded, n, 0, 3);
+	std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
 
 	// // z = 1 + (-2/t)
 	evaluator.add_reduced_error(ctxt_temp, cOne, ctxt_temp);
 	
 	std::cout << "\n check 5 : \n";
 	for (long i=0; i<n; i++) decoded[i] += 1.0;
-	print_part(decoded, n, 0, 3);
-	decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+	std::cout << "plain : "; print_part(decoded, n, 0, 3);
+	std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
 	ctxt_out = ctxt_temp;
 }
 
@@ -219,6 +276,44 @@ void Exp_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& enc
 
 	ctxt_out = ctxt_temp;
 }
+/*
+ * Exp function
+ * Reference : Minimax Approximation
+ * Input : x
+ * Output : Exp(x)
+ * TODO : PA, NA, LA selection option
+*/
+void Exp_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer) {
+
+	Ciphertext ctxt_temp = ctxt_in;
+
+	// exp(x) for input range {-8, 8}, deg = 6
+	// polynomial coefficients
+	std::vector<double> coeffs = {0.99999999999997691,0.015625000001294038, 0.00012207031250902644, 6.3578271585644867e-07, 2.4835262789494062e-09, 7.766075608611715e-12,2.0223685068764693e-14 };
+
+	evalPoly(coeffs, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+
+	// (e^x)^32
+	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
+	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(1/32*x)
+
+	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
+	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(1/16*x)
+
+	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
+	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(1/8*x)
+
+	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
+	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(1/4*x)
+	
+	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
+	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(1/2*x)
+
+	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
+	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(x)
+
+	ctxt_out = ctxt_temp;
+}
 
 /*
  * Expm1 function
@@ -226,7 +321,7 @@ void Exp_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& enc
  * Input : x
  * Output : Exp(x) - 1
 */
-void Expm1(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer) {
+void Expm1_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer) {
 
 	Plaintext pOne;
 	Ciphertext cOne, cTemp;
@@ -291,6 +386,49 @@ void Inv_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& enc
 	}
 
 	ctxt_out = cb;
+}
+
+/*
+ * Inverse function
+ * Reference : https://eprint.iacr.org/2019/417.pdf
+ * Input : x
+ * Output : 1/x
+*/
+void Inv_NA2(int d, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer) {
+
+    Plaintext pa, pb, pOne, pTwo, pKi;
+	Ciphertext cOne, cTwo, cTemp;
+	Ciphertext ca, cb, cc;
+
+	// generate plaintext
+	std::vector<double> ones(n, 1.0);
+	std::vector<double> twos(n, 2.0);
+	encoder.encode(ones, ctxt_in.scale(), pOne);
+	encoder.encode(twos, ctxt_in.scale(), pTwo);
+	encryptor.encrypt(pOne, cOne);
+	encryptor.encrypt(pTwo, cTwo);
+
+	evaluator.negate_inplace(ctxt_in); // x = -x
+	ca = ctxt_in;
+	cb = ctxt_in;
+	evaluator.add_inplace_reduced_error(ca, cTwo);
+	evaluator.add_inplace_reduced_error(cb, cOne);
+
+	// iteration
+	for (int i=1; i<d; i++) {
+		// b = b**2
+		evaluator.multiply_inplace_reduced_error(cb, cb, rlks);
+		evaluator.rescale_to_next_inplace(cb);
+
+		// c = b+1
+		evaluator.add_reduced_error(cb, cOne, cc);
+
+		// a = a * c
+		evaluator.multiply_reduced_error(ca, cc, rlks, ca);
+		evaluator.rescale_to_next_inplace(ca);
+	}
+
+	ctxt_out = ca;
 }
 
 // void Abs(double x);       // return |x|

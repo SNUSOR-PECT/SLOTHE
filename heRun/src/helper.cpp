@@ -7,11 +7,17 @@ void Timer::start(void) {
 void Timer::end(void) {
     t_end = high_resolution_clock::now();
     t_start = t_starts.top();
-    t_diff = duration_cast<milliseconds>(t_end - t_start);
+    t_diffs.push_back(duration_cast<milliseconds>(t_end - t_start)); cnt += 1;
 
     t_starts.pop();
+}
+void Timer::calAvg(void) {
+    int sum = 0;
+    for (int i=0; i<cnt; i++) sum += t_diffs[i].count();
+    std::cout << "[*] time : " << sum / (double)cnt << " ms\n";
 
-    std::cout << "[*] time : " << t_diff.count() << " ms" << std::endl;
+    t_diffs.clear();
+    cnt = 0;
 }
 
 void checkPrecision(long n, long log_modulus, SEALContext& context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks) {
@@ -19,37 +25,43 @@ void checkPrecision(long n, long log_modulus, SEALContext& context, Encryptor& e
     Ciphertext ctxt;
 
     double scale = std::pow(2.0, log_modulus);
-    std::vector<double> decoded, decrypted;
+    std::vector<double> decoded, decrypted, multiplied;
 
-    double prec = 1.0;
-    double precEncode, precEncrypt;
-    bool validEncode = true, validEncrypt = true;
-    while (true) {
-        std::vector<double> vec(n, prec);
-        encoder.encode(vec, scale, ptxt);
-        encryptor.encrypt(ptxt, ctxt);
+    std::vector<double> ones(n, 1.0);
+    double precEncode, precEncrypt, precMult;
+    // double precEncodeBound, precEncryptBound, precMultBound;
 
-        // 1. Encode -> Decode
-        encoder.decode(ptxt, decoded);
+    std::vector<double> vec(n, 0.123456789);
+    encoder.encode(vec, scale, ptxt);
+    encryptor.encrypt(ptxt, ctxt);
 
-        // 2. Encrypt -> Decrypt -> Decode
-        decryptor.decrypt(ctxt, ptxt);
-        encoder.decode(ptxt, decrypted);
+    // 1. Encode -> Decode
+    encoder.decode(ptxt, decoded);
 
-        // check precision
-        validEncode = (abs(prec - decoded[0]) < prec);
-        validEncrypt = (abs(prec - decrypted[0]) < prec);
+    // 2. Encrypt -> Decrypt -> Decode
+    decryptor.decrypt(ctxt, ptxt);
+    encoder.decode(ptxt, decrypted);
 
-        if ((!validEncode && !validEncrypt)) break;
-        if (validEncode) precEncode = prec;
-        if (validEncrypt) precEncrypt = prec;
-
-        prec /= 10.0;
+    // 3. Successive multiplication & rescale & relinearizes
+    int totalLvl = context.get_context_data(ctxt.parms_id())->chain_index();
+    Ciphertext ctxt_temp = ctxt;
+    for (int i=0; i<totalLvl; i++) {
+        evaluator.multiply_vector_reduced_error(ctxt_temp, ones, ctxt_temp);
+        evaluator.rescale_to_next_inplace(ctxt_temp);
     }
+    decryptor.decrypt(ctxt_temp, ptxt);
+    encoder.decode(ptxt, multiplied);
 
-    std::cout << "\nUsing scalingfactor " << log_modulus << ",\n";
-    std::cout << "Encode precision bound : " << precEncode << "\n";
-    std::cout << "Encrypt precision bound : " << precEncrypt << "\n\n";
+    precEncode = abs(vec[0] - decoded[0]);
+    precEncrypt = abs(vec[0] - decrypted[0]);
+    precMult = abs(vec[0] - multiplied[0]);
+
+    // print results
+    // std::cout << "\nUsing scalingfactor " << log_modulus << ",\n";
+    // std::cout << "Encode precision bound : " << precEncode << "\n";
+    // std::cout << "Encrypt precision bound : " << precEncrypt << "\n";
+    // std::cout << "Multiplication precision bound : " << precMult << "\n\n";
+    std::cout << precEncode << ", " << precEncrypt << ", " << precMult << "\n";
 }
 
 void reEncrypt(long n, SEALContext& context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out) {

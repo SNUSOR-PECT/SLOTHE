@@ -1,5 +1,9 @@
 #include "plainNaafs.hpp"
 
+////////////////////////////////////////////////
+//////        Activation Functions        //////
+////////////////////////////////////////////////
+
 double ReLU(double x) {
     return x > 0.0 ? x : 0.0; // std::max(x, 0);
 }
@@ -40,4 +44,19 @@ double Log(double x) {
 double Compare(double x, double y) {
     if (x==y) return 0.5;
     else return x > y ? 1.0 : 0.0;
+}
+
+/////////////////////////////////////////////////
+//////          Removed+Optimized          //////
+/////////////////////////////////////////////////
+
+double _Tanh(double x) {
+    // double t = expm1(2*fabs(x));
+    // t = t + 2;
+    // double z = 1 - 2/t;
+    // return (x>=0) ? z : -z;
+    double t = expm1(2*x);
+    t = t + 2;
+    double z = 1 - 2/t;
+    return z;
 }

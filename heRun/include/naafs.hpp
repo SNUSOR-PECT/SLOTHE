@@ -14,7 +14,7 @@ using namespace seal;
 using namespace NTL;
 
 // for aSOR
-#define maxIter 100
+#define maxIter 10000
 
 /*
  * PA : Polynomial Approximation
@@ -34,8 +34,10 @@ void Softplus_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor
 
 // Inner Functions
 void Exp_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer);       // return exp(x)
+void Exp_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer);  
 void Expm1_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer);   // return exp(x)-1
 void Inv_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer);       // return 1/x
+void Inv_NA2(int d, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer);
 // void Abs(double x);       // return |x|
 // void Erf(double x);       // return erf(x)
 // void Log(double x);       // return log(x)

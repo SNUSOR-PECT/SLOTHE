@@ -20,12 +20,14 @@ class Timer {
     public:
         void start(void);
         void end(void);
+        void calAvg(void);
 
-    public:
+    private:
         std::stack<high_resolution_clock::time_point> t_starts;
         high_resolution_clock::time_point t_start, t_end;
-    private:
-        milliseconds t_diff;
+        std::vector<milliseconds> t_diffs;
+        int cnt = 0;
+        
 };
 
 // Util functions
