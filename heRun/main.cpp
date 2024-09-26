@@ -31,11 +31,11 @@ int main(void) {
     do {
         std::cout << "[*] select NAAF option or exit(0) : ";
         if (!(std::cin >> sel)) valid = false;
-        else if (sel < 0 || sel > 8) valid = false;
+        else if (sel < 0 || sel > 10) valid = false;
         else valid = true;
 
         if (!valid) {
-            std::cout << "[**] valid option : type 1 ~ 7\n";
+            std::cout << "[**] valid option : type 1 ~ 9\n";
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
@@ -82,10 +82,10 @@ int main(void) {
         level = K.size() * 2 + 2; // 2 for normalization
     }
 
-    int d = 7;
+    int d = 12;
     level = d;
     
-    for (long scalingfactor=40; scalingfactor<=40; scalingfactor+=5) {
+    for (long scalingfactor=40; scalingfactor<=55; scalingfactor+=5) {
 
     // std::cout << "set HE parameters ...\n";
 

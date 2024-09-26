@@ -271,8 +271,81 @@ void Exp_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& enc
 		0.0005489786020671407, -4.6021316887290597e-05, -4.8475009048631753e-06,
 		1.0919219951807688e-06, 9.7745273355354518e-08
 	};
+	// exp(x) for input range {-8, 8}, deg = 12
+	coeffs = { 
+		1.0348549157458065, 0.90254574305568946, 0.45460894517316036, 0.2083068371604872, 0.051460849541035601,
+		0.003300068424021529, 0.00059146168240658582, 0.00045473808525950491, 5.5583873985284263e-05,
+		-3.3756379439475385e-06, -3.1998158686145635e-07, 8.938536508918577e-08, 7.3567573506096368e-09
+	};
+	// exp(x) for input range {-8, 8}, deg = 13
+	coeffs = {
+		1.0162688150196024, 1.0151656120796484, 0.4754984444738129, 0.15898817244307911, 0.047655502146270609, 
+		0.009469437414373557, 0.00084501819147693848, 0.00012404460213915011, 4.7946371846829354e-05, 
+		5.2402032461441366e-06, -2.1394041129885851e-07, -1.8354208687483416e-08, 6.8046104925637566e-09, 5.1814626949681181e-10
+	};
+	// exp(x) for input range {-8, 8}, deg = 14
+	coeffs = {
+		0.99793439351428825, 1.0076540467235238, 0.50359780424691192, 0.1622723520222516, 0.04062592459335404,
+		0.0090591172951875916, 0.001504391404722287, 0.00014601752841999479, 1.8497424594732924e-05, 4.6681701170016995e-06,
+		4.6117029005224032e-07, -1.1205629866794604e-08, -8.6937996298728718e-10, 4.8378548649822663e-10,
+		3.426753658217539e-11
+	};
+	// exp(x) for input range {-8, 8}, deg = 15
+	coeffs = {
+		0.9990217145299044, 0.99907996327451232, 0.50193385382991584, 0.16727699688056655, 0.041041720222194954,
+		0.0082141712465480417, 0.0014654247003862545, 0.00020891033993638476, 2.0236501050563403e-05, 
+		2.2652325774980806e-06, 4.2132604434418509e-07, 3.7958775994285675e-08, -4.1669566760104027e-10, 
+		-2.8462589448106963e-11, 3.2246970421738508e-11, 2.1347933669654444e-12
+	};
+	// exp(x) for input range {-8, 8}, deg = 16 // transparant for scaling factor 2^40
+	coeffs = {
+		1.0000983086534192, 0.99953404385689315, 0.4997794397789348, 0.16701223093803194, 0.041748954741921848,
+		0.0082588353304666306, 0.0013769882969444369, 0.00020558802924816117, 2.5666700211076415e-05,
+		2.3920977867122337e-06, 2.4027395216735937e-07, 3.5364295652128558e-08, 2.9273099584048915e-09, 
+		-1.4410868494212733e-12, 8.7157133387653415e-14, 2.0222193023754537e-12, 1.2564436687560195e-13
+	};
+	// exp(x) for input range {-8, 8}, deg = 17
+	coeffs = {
+		1.0000470485337321, 1.0000445500947075, 0.49988191857744274, 0.16662919279441651, 0.041715339574576855,
+		0.008342652962348724, 0.0013811891155281579, 0.0001973536680004622, 2.5408891903948518e-05, 
+		2.8210700738583012e-06, 2.4886604271946425e-07, 2.268761787753262e-08, 2.7686730358909311e-09, 
+		2.1190457120993993e-10, 1.6123150126678339e-12, 1.1706631486766591e-13, 1.1968738821325122e-13,
+		7.0051460638760276e-15
+	};
+	// exp(x) for input range {-8, 8}, deg = 18 // error increases for scaling factor 2^40 in normalized setting
+	coeffs = {
+		0.99999616683294323, 1.0000226107597305, 0.50001076212528972, 0.16664564239630106, 0.041661638166427602,
+		0.0083390554763170723, 0.0013898059135244595, 0.00019770692262237812, 2.4716322493140667e-05, 2.802674444791058e-06,
+		2.801335465845061e-07, 2.3231048556053899e-08, 1.9394805033084182e-09, 2.0276141278016601e-10, 
+		1.442782029302512e-11, 1.9869306084984507e-13, 1.2878728607673224e-14,
+		6.7050754581321854e-15, 3.7090267822928621e-16
+	};
+	// exp(x) for input range {-8, 8}, deg = 19
+	coeffs = {
+		0.99999815129206371, 0.9999982399210785, 0.50000574036532008, 0.1666684965975094, 0.041663730095132114,
+		0.0083327690867660564, 0.0013894703955504889, 0.00019849287699167075, 2.474327956846644e-05, 2.7494498150180256e-06,
+		2.7891689488361976e-07, 2.5348244454163063e-08, 1.9717365417781227e-09, 1.5186085482154407e-10, 1.3929407400361025e-11,
+		9.2592448542632962e-13, 1.7031809422902854e-14, 1.0230227275577855e-15, 3.5648336397055117e-16, 1.8692596459501636e-17
+	};
+	bool valid = true;
+	double norm = 0.0;
+	double bound = 1e-08;
+	for (size_t i=coeffs.size()-1; i>=0; i--) {
+		if (abs(coeffs[i]) < bound) {
+			valid = false;
+			norm = floor(bound / pow(10, floor(log10(abs(coeffs[i])))));
+			for (size_t j=0; j<coeffs.size(); j++) coeffs[j] *= norm;
+			break;
+			}
+	}
+	std::vector<double> norms(n, 1/norm);
 
 	evalPoly(coeffs, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	
+	if (!valid) {
+		evaluator.multiply_vector_reduced_error(ctxt_temp, norms, ctxt_temp);
+		evaluator.rescale_to_next_inplace(ctxt_temp);
+	}
 
 	ctxt_out = ctxt_temp;
 }
@@ -286,31 +359,74 @@ void Exp_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& enc
 void Exp_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer) {
 
 	Ciphertext ctxt_temp = ctxt_in;
-
-	// exp(x) for input range {-8, 8}, deg = 6
+	
 	// polynomial coefficients
-	std::vector<double> coeffs = {0.99999999999997691,0.015625000001294038, 0.00012207031250902644, 6.3578271585644867e-07, 2.4835262789494062e-09, 7.766075608611715e-12,2.0223685068764693e-14 };
+	// compute exp(x) by approximation of exp(x/B) 
+	int log_B = 3; // B = 64 --> lob_B = 6
+	// exp(x/64) for input range {-8, 8}, deg = 6, log_B = 6
+	std::vector<double> coeffs = {
+		0.99999999999997691,0.015625000001294038, 0.00012207031250902644,
+	 	6.3578271585644867e-07, 2.4835262789494062e-09, 7.766075608611715e-12,2.0223685068764693e-14 };
+    // exp(x/64) for input range {-8, 8}, deg = 7, log_B = 6
+	coeffs = {
+		0.99999999999998845, 0.015624999999999839, 0.00012207031250577666, 6.3578287763174613e-07, 2.4835264143568053e-09,
+		7.7610201232207903e-12, 2.0222274575981516e-14, 4.5138306140717325e-17
+	};
+	// exp(x/32) for input range {-8, 8}, deg = 7, log_B = 5
+	coeffs = {
+		0.99999999999703881, 0.031249999999917746, 0.00048828125148044066, 5.0862630349692237e-06,
+		3.9736314209061608e-08, 2.4835200397576942e-10, 1.2963936748973369e-12, 5.7871131015244916e-15
+	};
+	// exp(x/16) for input range {-8, 8}, deg = 7, log_B = 4 // the best
+	coeffs = {
+		0.99999999923843008, 0.062499999957691746, 0.0019531253806492812, 4.0690111435471404e-05,
+		6.3575315810601785e-07, 7.9469351476292474e-09, 8.3526260566246237e-11, 7.4558560109173961e-13
+	};
+	// exp(x/16) for input range {-8, 8}, deg = 8, log_B = 4 //
+	coeffs = {
+		1.0000000000010572, 0.062499999976216671, 0.0019531249993228611, 4.0690109119897049e-05, 
+		6.3578294983438113e-07, 7.9470075085679408e-09, 8.2781457326472864e-11, 7.4493952580533382e-13,
+		5.8188312893328979e-15
+	};
+	// exp(x/8) for input range {-8, 8}, deg = 9, log_B = 3 // not bad
+	coeffs = {
+		1.0000000005494576, 0.12500000006243503, 0.0078124995710659208, 0.00032552081676327728, 
+		1.017257959393278e-05, 2.5431441657319724e-07, 5.2958525224794877e-09, 9.4570322004214351e-11,
+		1.5198698902778767e-12, 2.1098698085983081e-14
+	};
+	// exp(x/8) for input range {-8, 8}, deg = 10, log_B = 3 // bad
+	coeffs = {
+		0.99999999999792144, 0.12500000003427839, 0.0078125000019799475, 0.00032552082262902847, 
+		1.0172525727470923e-05, 2.5431408663280106e-07, 5.2982092492310126e-09, 9.4577195641773637e-11, 
+		1.4777845590576949e-12, 2.1050965120512778e-14, 2.63037817172648e-16
+	};
 
+	// scaling up for coefficients 
+	bool valid = true;
+	double norm = 0.0;
+	double bound = 1e-08;
+	for (size_t i=coeffs.size()-1; i>=0; i--) {
+		if (abs(coeffs[i]) < bound) {
+			valid = false;
+			norm = floor(bound / pow(10, floor(log10(abs(coeffs[i])))));
+			for (size_t j=0; j<coeffs.size(); j++) coeffs[j] *= norm;
+			break;
+			}
+	}
+	std::vector<double> norms(n, 1/norm);
+	
 	evalPoly(coeffs, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
 
-	// (e^x)^32
-	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
-	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(1/32*x)
-
-	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
-	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(1/16*x)
-
-	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
-	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(1/8*x)
-
-	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
-	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(1/4*x)
-	
-	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
-	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(1/2*x)
-
-	evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
-	evaluator.rescale_to_next_inplace(ctxt_temp); // res = e^(x)
+	// scale down
+	if (!valid) {
+		evaluator.multiply_vector_reduced_error(ctxt_temp, norms, ctxt_temp);
+		evaluator.rescale_to_next_inplace(ctxt_temp);
+	}	
+	//compute exp(x/B)^B by iteration
+	for (int i = 0; i<log_B;i++ ){
+		evaluator.multiply_reduced_error(ctxt_temp, ctxt_temp, rlks, ctxt_temp);
+	    evaluator.rescale_to_next_inplace(ctxt_temp);
+	}
 
 	ctxt_out = ctxt_temp;
 }
