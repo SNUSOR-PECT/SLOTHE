@@ -169,10 +169,19 @@ int main(void) {
 
     } else if (sel == 4) {  // 4. Sigmoid
         std::cout << "\nApproximated Sigmoid ..." << std::endl;
+        
+        for (int i=0; i<10; i++) {
+            timer.start();
+            Sigmoid_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+            timer.end();
+        }
+        timer.calAvg();
 
-        timer.start();
-        Sigmoid_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
-        timer.end();
+        for (long i=0; i<n; i++) output[i] = Sigmoid(m_x[i]);
+
+        ShowFailure_Sigmoid(decryptor, encoder, ctxt_res, m_x, alpha, n);
+        std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
+
 
     } else if (sel == 5) {  // 5. GeLU
         std::cout << "\nApproximated GeLU ..." << std::endl;
@@ -230,9 +239,16 @@ int main(void) {
     } else if (sel == 9) {  // 8. Exp
         std::cout << "\nApproximated Exp ..." << std::endl;
 
-        timer.start();
-        Exp_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
-        timer.end();
+        // timer.start();
+        // Exp_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+        // timer.end();
+
+        for (int i=0; i<5; i++) {
+            timer.start();
+            Exp_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+            timer.end();
+        }
+        timer.calAvg();
 
         for (long i=0; i<n; i++) output[i] = exp(m_x[i]);
 
