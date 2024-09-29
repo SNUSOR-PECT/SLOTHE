@@ -86,6 +86,7 @@ long ShowFailure_Tanh(Decryptor &decryptor, CKKSEncoder &encoder, Ciphertext& ct
     double avg_err = 0.0;
     for (int i = 0; i < n; ++i) {
         double diff = abs(tanh(x[i]) - output[i]);
+        // double diff = abs(_Tanh(x[i]) - output[i]);
         if(diff > bound) failure++;
         max_err = max_err > diff ? max_err : diff;
         avg_err += diff;

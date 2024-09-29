@@ -96,60 +96,65 @@ void Tanh_LA(std::vector<double>& K, long n, SEALContext &context, Encryptor& en
 	evaluator.multiply_vector_reduced_error(ctxt_in, twos, ctxt_temp);
 	evaluator.rescale_to_next_inplace(ctxt_temp);
 	Expm1_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
-	evaluator.add_reduced_error(ctxt_temp, cTwo, ctxt_temp);
+	evaluator.add_reduced_error(ctxt_temp, cTwo, ctxt_temp); // expm1(2x)+2
 
 	// after expm1(x) + 2, always positive -> just normalize
 	for (long i=0; i<n; i++) decoded[i] = expm1(2*decoded[i]) + 2;
 
-	// encoder.encode(decoded, ctxt_in.scale(), ptxt_decrypted);
-	// encryptor.encrypt(ptxt_decrypted, ctxt_temp);
+	// // encoder.encode(decoded, ctxt_in.scale(), ptxt_decrypted);
+	// // encryptor.encrypt(ptxt_decrypted, ctxt_temp);
 
-	std::cout << "\n check 1 : expm1(2*decoded[i]) + 2 \n";
-	std::cout << "plain : "; print_part(decoded, n, 0, 3);
-	std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+	// std::cout << "\n check 1 : expm1(2*decoded[i]) + 2 \n";
+	// std::cout << "plain : "; print_part(decoded, n, 0, 3);
+	// std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
 
-	
-	// double normN = 1e+07; // for x in [-8, 8]
-	double normN = 1e+04; // for x in [-4, 4]
-	std::vector<double> n_inv(n, 1/normN);
+	// double normN = 1e+04; // for x in [-4, 4]
+	// std::vector<double> n_inv(n, 1/normN);
+	std::vector<double> n_inv(n);
+	for (long i=0; i<n; i++) {
+		n_inv[i] = 1 / pow(10, ceil(log10(decoded[i])));
+	}
 
 	// normalization
 	evaluator.multiply_vector_reduced_error(ctxt_temp, n_inv, ctxt_temp);
 	evaluator.rescale_to_next_inplace(ctxt_temp);
 
-	std::cout << "\n check 2 : t = t * (1/normN) \n";
-	for (long i=0; i<n; i++) decoded[i] *= n_inv[i];
-	std::cout << "plain : "; print_part(decoded, n, 0, 3);
-	std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+	// std::cout << "remaining level : " << context.get_context_data(ctxt_temp.parms_id())->chain_index() << std::endl;
 
-	reEncrypt(n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp);
+	// std::cout << "\n check 2 : t = t * (1/normN) \n";
+	// for (long i=0; i<n; i++) decoded[i] *= n_inv[i];
+	// std::cout << "plain : "; print_part(decoded, n, 0, 3);
+	// std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+
 	// inverse
+	// reEncrypt(n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp);
 	// Inv_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
-	Inv_NA2(17, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
-	reEncrypt(n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp);
+	Inv_NA2(7, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	// reEncrypt(n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp);
 
-	std::cout << "\n check 3 : Inverse(t)\n";
-	for (long i=0; i<n; i++) decoded[i] = 1 / decoded[i];
-	std::cout << "plain : "; print_part(decoded, n, 0, 3);
-	std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+	// std::cout << "\n check 3 : Inverse(t)\n";
+	// for (long i=0; i<n; i++) decoded[i] = 1 / decoded[i];
+	// std::cout << "plain : "; print_part(decoded, n, 0, 3);
+	// std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
 
 	// normalization back and multiply -2
 	for (long i=0; i<n; i++) n_inv[i] = -2.0 * n_inv[i];
 	evaluator.multiply_vector_reduced_error(ctxt_temp, n_inv, ctxt_temp);
 	evaluator.rescale_to_next_inplace(ctxt_temp);
 
-	std::cout << "\n check 4 : \n";
-	for (long i=0; i<n; i++) decoded[i] *= n_inv[i];
-	std::cout << "plain : "; print_part(decoded, n, 0, 3);
-	std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+	// std::cout << "\n check 4 : \n";
+	// for (long i=0; i<n; i++) decoded[i] *= n_inv[i];
+	// std::cout << "plain : "; print_part(decoded, n, 0, 3);
+	// std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
 
-	// // z = 1 + (-2/t)
+	// z = 1 + (-2/t)
 	evaluator.add_reduced_error(ctxt_temp, cOne, ctxt_temp);
 	
-	std::cout << "\n check 5 : \n";
-	for (long i=0; i<n; i++) decoded[i] += 1.0;
-	std::cout << "plain : "; print_part(decoded, n, 0, 3);
-	std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+	// std::cout << "\n check 5 : \n";
+	// for (long i=0; i<n; i++) decoded[i] += 1.0;
+	// std::cout << "plain : "; print_part(decoded, n, 0, 3);
+	// std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
+	
 	ctxt_out = ctxt_temp;
 }
 
@@ -482,7 +487,7 @@ void Exp_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& enc
  * Input : x
  * Output : Exp(x) - 1
 */
-void Expm1_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer) {
+void Expm1_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer) {
 
 	Plaintext pOne;
 	Ciphertext cOne, cTemp;
@@ -494,6 +499,29 @@ void Expm1_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& e
 
 	// compute exp(x) - 1
 	Exp_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_in, cTemp, timer);
+	evaluator.sub_reduced_error(cTemp, cOne, cTemp);
+
+	ctxt_out = cTemp;
+}
+
+/*
+ * Expm1 function
+ * Reference : definition
+ * Input : x
+ * Output : Exp(x) - 1
+*/
+void Expm1_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer) {
+
+	Plaintext pOne;
+	Ciphertext cOne, cTemp;
+
+	// generate plaintext
+	std::vector<double> ones(n, 1.0);
+	encoder.encode(ones, ctxt_in.scale(), pOne);
+	encryptor.encrypt(pOne, cOne);
+
+	// compute exp(x) - 1
+	Exp_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_in, cTemp, timer);
 	evaluator.sub_reduced_error(cTemp, cOne, cTemp);
 
 	ctxt_out = cTemp;

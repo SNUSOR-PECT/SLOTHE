@@ -23,3 +23,7 @@ double Log(double x);       // return log(x)
 
 // Comparison
 double Compare(double x, double y);     // return x > y ? 1.0 : 0.0
+
+// Removed+Optimized Functions
+double _Tanh(double x);
+double _Inv(double x, int d);

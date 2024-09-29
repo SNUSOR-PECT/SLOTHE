@@ -82,10 +82,10 @@ int main(void) {
         level = K.size() * 2 + 2; // 2 for normalization
     }
 
-    int d = 12;
+    int d = 19;
     level = d;
     
-    for (long scalingfactor=40; scalingfactor<=55; scalingfactor+=5) {
+    for (long scalingfactor=40; scalingfactor<=40; scalingfactor+=5) {
 
     // std::cout << "set HE parameters ...\n";
 
@@ -145,25 +145,31 @@ int main(void) {
     } else if (sel == 2) {  // 2. Swish
 
     } else if (sel == 3) {  // 3. Tanh
-        std::cout << "Approximated Tanh ..." << std::endl;
+        std::cout << "Approximated Tanh ...\n" << std::endl;
 
-        for (int i=0; i<10; i++) {
+        // 1. Numerical Approximation -> level=7
+        Ciphertext ctxt_na = ctxt;
+        for (int i=0; i<12; i++) evaluator.mod_switch_to_next_inplace(ctxt_na);
+        std::cout << "Numerical Approximation : \n";
+        for (int i=0; i<5; i++) {
             timer.start();
-            Tanh_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+            Tanh_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_na, ctxt_res, timer);
             timer.end();
         }
         timer.calAvg();
 
-        // timer.start();
-        // Tanh_LA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
-        // timer.end();
+        ShowFailure_Tanh(decryptor, encoder, ctxt_res, m_x, alpha, n);
+        std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
 
-        for (long i=0; i<n; i++) output[i] = tanh(m_x[i]);
+        // 2. Lazy Approximation -> level=19
+        std::cout << "\nLazy Approximation : \n";
+        for (int i=0; i<5; i++) {
+            timer.start();
+            Tanh_LA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+            timer.end();
+        }
+        timer.calAvg();
 
-        // result
-        // std::cout << "Expected output : \n";
-        // print_part(output, n, 0, 3);
-        // decrypt_and_print_part(ctxt_res, decryptor, encoder, n, 0, 3);
         ShowFailure_Tanh(decryptor, encoder, ctxt_res, m_x, alpha, n);
         std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
 
