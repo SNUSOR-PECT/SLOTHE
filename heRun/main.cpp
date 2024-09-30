@@ -45,7 +45,8 @@ int main(void) {
     int alpha = 0; // precision alpha
     valid = true;
     do {
-        std::cout << "[*] select alpha option(0-30) or exit(-1) : ";
+        std::cout << "[*] select alpha option(0-30) or exit(-1)\n";
+        std::cout << "    4(1e-01), 7(1e-02), 10(1e-03), 14(1e-04), 17(1e-05), 20(1e-06) : ";
         if (!(std::cin >> alpha)) valid = false;
         else if (alpha < 0 || alpha > 30) valid = false;
         else valid = true;
@@ -82,7 +83,7 @@ int main(void) {
         level = K.size() * 2 + 2; // 2 for normalization
     }
 
-    int d = 19;
+    int d = 7;
     level = d;
     
     for (long scalingfactor=40; scalingfactor<=40; scalingfactor+=5) {
@@ -125,7 +126,8 @@ int main(void) {
     // Generate input vector
     // std::cout << "generate input vector ...\n";
     std::vector<double> m_x(n), output(n);
-    for(int i=0; i<n; i++) m_x[i] = -4.0 + 8.0 * static_cast<double>(i+1) / static_cast<double>(n+1);
+    // for(int i=0; i<n; i++) m_x[i] = -4.0 + 8.0 * static_cast<double>(i+1) / static_cast<double>(n+1);
+    for(int i=0; i<n; i++) m_x[i] = -8.0 + 16.0 * static_cast<double>(i+1) / static_cast<double>(n+1);
 
     // Encode & Encrypt
     // std::cout << "encode and encrypt input vector ...\n";
@@ -163,7 +165,7 @@ int main(void) {
 
         // 2. Lazy Approximation -> level=19
         std::cout << "\nLazy Approximation : \n";
-        for (int i=0; i<5; i++) {
+        for (int i=0; i<1; i++) {
             timer.start();
             Tanh_LA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
             timer.end();
@@ -245,23 +247,29 @@ int main(void) {
     } else if (sel == 9) {  // 8. Exp
         std::cout << "\nApproximated Exp ..." << std::endl;
 
-        // timer.start();
-        // Exp_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
-        // timer.end();
-
+        // 1. Numerical Approximation -> level=6
+        Ciphertext ctxt_na = ctxt;
+        for (int i=0; i<12; i++) evaluator.mod_switch_to_next_inplace(ctxt_na);
+        std::cout << "Numerical Approximation : \n";
         for (int i=0; i<5; i++) {
+            timer.start();
+            Exp_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_na, ctxt_res, timer);
+            timer.end();
+        }
+        timer.calAvg();
+
+        ShowFailure_Exp(decryptor, encoder, ctxt_res, m_x, alpha, n);
+        std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
+
+        // 2. Lazy Approximation -> level=19
+        std::cout << "\nLazy Approximation : \n";
+        for (int i=0; i<1; i++) {
             timer.start();
             Exp_NA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
             timer.end();
         }
         timer.calAvg();
 
-        for (long i=0; i<n; i++) output[i] = exp(m_x[i]);
-
-        // result
-        std::cout << "Expected output : ";
-        print_part(output, n, 0, 3);
-        decrypt_and_print_part(ctxt_res, decryptor, encoder, n, 0, 3);
         ShowFailure_Exp(decryptor, encoder, ctxt_res, m_x, alpha, n);
         std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
         

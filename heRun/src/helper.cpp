@@ -84,17 +84,24 @@ long ShowFailure_Tanh(Decryptor &decryptor, CKKSEncoder &encoder, Ciphertext& ct
 
     double max_err = -1.0;
     double avg_err = 0.0;
+    double max_err_expected = -1.0;
+    double avg_err_expected = 0.0;
     for (int i = 0; i < n; ++i) {
         double diff = abs(tanh(x[i]) - output[i]);
         // double diff = abs(_Tanh(x[i]) - output[i]);
+        double diff_expected = abs(_Tanh(x[i]) - tanh(x[i])); // TODO : _Tanh -> function argument
         if(diff > bound) failure++;
         max_err = max_err > diff ? max_err : diff;
         avg_err += diff;
+        max_err_expected = max_err_expected > diff_expected ? max_err_expected : diff_expected;
+        avg_err_expected += diff_expected;
     }
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "failure : " << failure << std::endl;
     std::cout << "max_err : " << max_err << std::endl;
     std::cout << "avg_err : " << avg_err/(double)n << std::endl;
+    std::cout << "max_err (expected) : " << max_err_expected << std::endl;
+    std::cout << "avg_err (expected) : " << avg_err_expected/(double)n << std::endl;
     std::cout << "-------------------------------------------------" << std::endl;
     return failure;
 }
