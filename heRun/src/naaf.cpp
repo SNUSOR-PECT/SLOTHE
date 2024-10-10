@@ -333,12 +333,79 @@ void GeLU_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& en
 		0.23236897642638954, 0.5, 0.12499208218954172
 	};
 
-	// // // GeLU(x) for input range {-4, 4}, deg = 4
-	// // // Estimated max error: 8.5367342982687048e-2, max error: 0.0576975
+	// // GeLU(x) for input range {-4, 4}, deg = 4
+	// // Estimated max error: 8.5367342982687048e-2, max error: 0.0576975
+	coeffs = {
+		0.085367342982687042, 0.5, 0.23009710938324585, -0.0072359965666587501
+	};
+
+	// GeLU(x) for input range {-4, 4}, deg = 6
+	// Estimated max error: 3.0403586794267702e-2, max error: 0.0304037
+	coeffs = {
+		0.030403586794267703, 0.5, 0.3095727644548717, -0.022057934197823387, 0.00065760259726501639
+	};
+
+	// GeLU(x) for input range {-4, 4}, deg = 8
+	// Estimated max error: 9.7864875482398635e-3, max error: 0.00978655
+	coeffs = {
+		0.0097864875482398632, 0.5, 0.35871545290287182, -0.03898432461029893, 0.0024569927859161198,
+		-5.8639560812159148e-05
+	};
+
+	// GeLU(x) for input range {-4, 4}, deg = 10
+	// Estimated max error: 2.8080717546215479e-3, max error: 0.00280842
+	coeffs = {
+		0.0028080717546215481, 0.5, 0.38346715083479921, -0.052381346863555299, 0.0049315073065240274,
+		-0.00024243334309001789, 4.7327817382536248e-06
+	};
+
+	// GeLU(x) for input range {-4, 4}, deg = 12
+	// Estimated max error: 7.1940208816310654e-4, max error: 0.000724509
+	coeffs = {
+		0.00071940208816310654, 0.5, 0.39379826081165603, -0.060413467115863075, 0.0071747313406209023,
+		-0.00052241330348353312, 2.0716376218231257e-05, -3.4034289741299491e-07
+	};
+
+	// GeLU(x) for input range {-4, 4}, deg = 14
+	// Estimated max error: 1.6558474704683232e-4, max error: 0.000189826
+	coeffs = {
+		0.00016558474704683233, 0.5, 0.3974464456329086, -0.064257452575186905, 0.0086740168431946891,
+		-0.00079846552147692148, 4.6649018320725335e-05, -1.5429873434924739e-06, 2.1837995880494254e-08
+	};
+	
+	// GeLU(x) for input range {-4, 4}, deg = 16
+	// Estimated max error: 3.4493328794615871e-5, max error: 8.68281e-05
+	coeffs = {
+		3.4493328794615872e-05, 0.5, 0.39855722270195454, -0.065779577518174925, 0.0094610101185500818,
+		-0.00099694424560165906, 7.3698375688078315e-05, -3.5776876979608134e-06, 1.0131052780459556e-07,
+		-1.2582506009220599e-09
+	};
+
+	// GeLU(x) for input range {-4, 4}, deg = 18
+	// Estimated max error: 6.5499835537812364e-6, max error: 3.1279e-05
+	coeffs = {
+		6.5499835537812362e-06,  0.5, 0.39885358929095927, -0.066291628031025548, 0.0097991506357187428,
+		-0.0011082107270140276, 9.4183720851956701e-05, -5.7864546510569294e-06, 2.3977943235317155e-07,
+		-5.9305310954201521e-09, 6.5588333855389698e-11
+	};
+
+	// // GeLU(x) for input range {-4, 4}, deg = 20
+	// // Estimated max error: 1.1413589951183467e-6, max error: 3.0849e-05
 	// coeffs = {
-	// 	0.085367342982687042, 0.5, 0.23009710938324585, 1e-11, -0.0072359965666587501
+	// 	1.1413589951183468e-06, 0.5, 0.39892382836274937, -0.066440971101446963, 0.0099216254950602392,
+	// 	-0.0011590020421636861, 0.00010624292488900897, -7.5250748842505974e-06, 3.9460398110724235e-07,
+	// 	-1.4248522872201567e-08, 3.1266892920303584e-10, -3.1157663517468109e-12
 	// };
 
+	// // GeLU(x) for input range {-4, 4}, deg = 22
+	// // Estimated max error: 1.8360508589354925e-7, max error: 3.0849e-05
+	// coeffs = {
+	// 	1.8360508589354924e-07, 0.5, 0.39893878420174828, -0.066479345362134262, 0.0099598564545339743,
+	// 	-0.0011784685134540486, 0.00011200962500321265, -8.5877553224965423e-06, 5.2014542959251707e-07,
+	// 	-2.3761947196583011e-08, 7.5977765225374954e-10, -1.4978578003708428e-11, 1.3580095113824087e-13
+	// };
+
+	
 
 	// // GeLU(x) for input range {-8, 8}, deg = 2
 	// // Estimated max error: 4.9993715738368353e-1
@@ -352,9 +419,29 @@ void GeLU_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& en
 	// // GeLU(x) for input range {-8, 8}, deg = 10
 	// // Estimated max error: 5.7697200707737303e-2
 	// coeffs = {0.057697200707737303, 0.5, 0.27025638888361592, -1e-11, -0.015662347546635213, 1e-11, 0.00051628622235233275, -1e-11, -7.902185216961197e-06, 1e-11, 4.4789071611223128e-08};
+	
+	bool valid = true;
+	double norm = 0.0;
+	double bound = 1e-08;
 
-	evalPoly(coeffs, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	for (int i=coeffs.size()-1; i>=0; i--) {
+		if (abs(coeffs[i]) < bound) {
+			valid = false;
+			norm = floor(bound / pow(10, floor(log10(abs(coeffs[i])))));
+			for (size_t j=0; j<coeffs.size(); j++) coeffs[j] *= norm;
+			break;
+			}
+	}
+	std::vector<double> norms(n, 1/norm);
 
+	evalPolyEven(coeffs, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	//evalPoly(coeffs, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	
+	if (!valid) {
+		evaluator.multiply_vector_reduced_error(ctxt_temp, norms, ctxt_temp);
+		evaluator.rescale_to_next_inplace(ctxt_temp);
+	}
+	
 	ctxt_out = ctxt_temp;
 }
 
@@ -370,24 +457,50 @@ void Softplus_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor
 
 	std::vector<double> coeffs;
 
-	// Softplus(x) for input range {-8, 8}, deg = 2
+	// Softplus(x) for input range {-4, 4}, deg = 2
 	// Estimated max error: 2.6227782350570383e-1
-	coeffs = {0.95542500406564912, 0.5, 0.051674816028327353};
-	// Softplus(x) for input range {-8, 8}, deg = 4
-	// Estimated max error: 7.8099534057619972e-2
-	coeffs = {0.77124671461756533, 0.5, 0.082536603095807487, 1e-11, -0.00052034996104344949};
-	// Softplus(x) for input range {-8, 8}, deg = 6
-	// Estimated max error: 2.7286444052623291e-2
-	coeffs = {0.72043362461256855, 0.5, 0.1013129408489427, -1e-11, -0.0013919469397213795, 1e-11, 9.6304881156135099e-06};
-	// Softplus(x) for input range {-8, 8}, deg = 8
-	// Estimated max error: 1.0233577491629362e-2
-	coeffs = {0.70338075805157463, 0.5, 0.11216236159902405, 1e-11, -0.0023454093711466227, -1e-11, 3.5215274922081019e-05, 1e-11, -2.0959057310016689e-07};
-	// Softplus(x) for input range {-8, 8}, deg = 10
-	// Estimated max error: 3.9968457802034743e-3
-	coeffs = {0.69714402634014883, 0.5, 0.11819128930392243, -1e-11, -0.0031936017375783091, 1e-11, 7.5258450189936426e-05, -1e-11, -9.6379894363676408e-07, 1e-11, 4.9036464829536086e-09};
+	coeffs = {
+		0.75248924295936692, 0.5, 0.082812671709866531
+	};
 
-	evalPoly(coeffs, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	// // Softplus(x) for input range {-8, 8}, deg = 2
+	// // Estimated max error: 2.6227782350570383e-1
+	// coeffs = {0.95542500406564912, 0.5, 0.051674816028327353};
+	// // Softplus(x) for input range {-8, 8}, deg = 4
+	// // Estimated max error: 7.8099534057619972e-2
+	// coeffs = {0.77124671461756533, 0.5, 0.082536603095807487, 1e-11, -0.00052034996104344949};
+	// // Softplus(x) for input range {-8, 8}, deg = 6
+	// // Estimated max error: 2.7286444052623291e-2
+	// coeffs = {0.72043362461256855, 0.5, 0.1013129408489427, -1e-11, -0.0013919469397213795, 1e-11, 9.6304881156135099e-06};
+	// // Softplus(x) for input range {-8, 8}, deg = 8
+	// // Estimated max error: 1.0233577491629362e-2
+	// coeffs = {0.70338075805157463, 0.5, 0.11216236159902405, 1e-11, -0.0023454093711466227, -1e-11, 3.5215274922081019e-05, 1e-11, -2.0959057310016689e-07};
+	// // Softplus(x) for input range {-8, 8}, deg = 10
+	// // Estimated max error: 3.9968457802034743e-3
+	// coeffs = {0.69714402634014883, 0.5, 0.11819128930392243, -1e-11, -0.0031936017375783091, 1e-11, 7.5258450189936426e-05, -1e-11, -9.6379894363676408e-07, 1e-11, 4.9036464829536086e-09};
 
+bool valid = true;
+	double norm = 0.0;
+	double bound = 1e-08;
+
+	for (int i=coeffs.size()-1; i>=0; i--) {
+		if (abs(coeffs[i]) < bound) {
+			valid = false;
+			norm = floor(bound / pow(10, floor(log10(abs(coeffs[i])))));
+			for (size_t j=0; j<coeffs.size(); j++) coeffs[j] *= norm;
+			break;
+			}
+	}
+	std::vector<double> norms(n, 1/norm);
+
+	evalPolyEven(coeffs, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	//evalPoly(coeffs, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt_temp, ctxt_temp, timer);
+	
+	if (!valid) {
+		evaluator.multiply_vector_reduced_error(ctxt_temp, norms, ctxt_temp);
+		evaluator.rescale_to_next_inplace(ctxt_temp);
+	}
+	
 	ctxt_out = ctxt_temp;
 }
 
@@ -827,6 +940,37 @@ void evalPolyOdd(std::vector<double> coeffs, Encryptor &encryptor, Evaluator &ev
 	encryptor.encrypt(ptxt, ctxt_out); // constant term
 
 	for (int i=1, j=1; i<_deg; i++, j+=2) {
+		for (int k=0; k<n; k++) m_coeffs[k] = coeffs[i];
+		evaluator.multiply_vector_reduced_error(powers[j], m_coeffs, ctxt_temp);
+		evaluator.rescale_to_next_inplace(ctxt_temp);
+		evaluator.add_reduced_error(ctxt_out, ctxt_temp, ctxt_out);
+	}
+}
+
+void evalPolyEven(std::vector<double> coeffs, Encryptor &encryptor, Evaluator &evaluator, Decryptor &decryptor, CKKSEncoder &encoder, PublicKey &pk, SecretKey &sk, RelinKeys &rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer) {
+	Plaintext ptxt;
+	Ciphertext ctxt_x, ctxt_temp;
+	
+	// compute all powers
+	int deg = (coeffs.size()-2)*2; // degree of poly
+	int _deg = coeffs.size(); // odd terms + constant
+	std::vector<Ciphertext> powers(deg+1);
+	compute_all_powers(ctxt_in, deg, evaluator, rlks, powers, timer);	
+
+	long n = ctxt_in.poly_modulus_degree()/2;
+    std::vector<double> m_coeffs(n);
+
+	// evaluating polynomial
+	for (int j=0; j<n; j++) m_coeffs[j] = coeffs[0];
+	encoder.encode(m_coeffs, ctxt_in.scale(), ptxt);
+	encryptor.encrypt(ptxt, ctxt_out); // constant term
+
+	for (int j=0; j<n; j++) m_coeffs[j] = coeffs[1];
+	evaluator.multiply_vector_reduced_error(powers[1], m_coeffs, ctxt_temp);
+	evaluator.rescale_to_next_inplace(ctxt_temp);	
+	evaluator.add_reduced_error(ctxt_out, ctxt_temp, ctxt_out); // first-degree polynomial
+
+	for (int i=2, j=2; i<_deg; i++, j+=2) {
 		for (int k=0; k<n; k++) m_coeffs[k] = coeffs[i];
 		evaluator.multiply_vector_reduced_error(powers[j], m_coeffs, ctxt_temp);
 		evaluator.rescale_to_next_inplace(ctxt_temp);

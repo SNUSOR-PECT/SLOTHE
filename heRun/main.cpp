@@ -118,6 +118,7 @@ int main(void) {
     Evaluator evaluator(context, encoder);
     Decryptor decryptor(context, sk);
 
+
     // Check plaintext/ciphertext precision
     // std::cout << "check precision ...\n";
     // for (int i=0; i<5; i++)
@@ -126,8 +127,8 @@ int main(void) {
     // Generate input vector
     // std::cout << "generate input vector ...\n";
     std::vector<double> m_x(n), output(n);
-    // for(int i=0; i<n; i++) m_x[i] = -4.0 + 8.0 * static_cast<double>(i+1) / static_cast<double>(n+1);
-    for(int i=0; i<n; i++) m_x[i] = -8.0 + 16.0 * static_cast<double>(i+1) / static_cast<double>(n+1);
+    for(int i=0; i<n; i++) m_x[i] = -4.0 + 8.0 * static_cast<double>(i+1) / static_cast<double>(n+1);
+    // for(int i=0; i<n; i++) m_x[i] = -8.0 + 16.0 * static_cast<double>(i+1) / static_cast<double>(n+1);
 
     // Encode & Encrypt
     // std::cout << "encode and encrypt input vector ...\n";
@@ -194,9 +195,20 @@ int main(void) {
     } else if (sel == 5) {  // 5. GeLU
         std::cout << "\nApproximated GeLU ..." << std::endl;
 
-        timer.start();
-        GeLU_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
-        timer.end();
+
+
+        for (int i=0; i<5; i++) {
+            timer.start();
+            GeLU_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+            timer.end();
+        }
+        timer.calAvg();
+
+        for (long i=0; i<n; i++) output[i] = GeLU(m_x[i]);
+
+        ShowFailure_GeLU(decryptor, encoder, ctxt_res, m_x, alpha, n);
+        std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
+        
         
     } else if (sel == 6) {  // 6. Softplus
         std::cout << "\nApproximated Softplus ..." << std::endl;
