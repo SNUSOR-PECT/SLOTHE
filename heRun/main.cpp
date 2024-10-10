@@ -1,4 +1,5 @@
 #include "main.hpp"
+#include "naafs.hpp"
 
 int main(void) {
     // Timer setting
@@ -213,9 +214,18 @@ int main(void) {
     } else if (sel == 6) {  // 6. Softplus
         std::cout << "\nApproximated Softplus ..." << std::endl;
 
-        timer.start();
-        Softplus_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
-        timer.end();
+        for (int i=0; i<5; i++) {
+            timer.start();
+            Softplus_PA(K, n, context, encryptor, evaluator, decryptor, encoder, pk, sk, rlks, ctxt, ctxt_res, timer);
+            timer.end();
+        }
+        timer.calAvg();
+
+        for (long i=0; i<n; i++) output[i] = Softplus(m_x[i]);
+
+        ShowFailure_Softplus(decryptor, encoder, ctxt_res, m_x, alpha, n);
+        std::cout << "remaining level : " << context.get_context_data(ctxt_res.parms_id())->chain_index() << std::endl;
+        
         
     } else if (sel == 7) {  // 7. Inverse (aSOR)
         for(int i=0; i<n; i++) m_x[i] = 0.05 + 0.95 * static_cast<double>(i+1) / static_cast<double>(n+1);
