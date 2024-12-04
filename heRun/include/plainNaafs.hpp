@@ -26,4 +26,7 @@ double Compare(double x, double y);     // return x > y ? 1.0 : 0.0
 
 // Removed+Optimized Functions
 double _Tanh(double x);
+double innerExp(double x);
+double _Exp(double x);
+double _Expm1(double x);
 double _Inv(double x, int d);
