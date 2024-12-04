@@ -53,7 +53,7 @@ void Tanh_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& en
 	bool valid = true;
 	double norm = 0.0;
 	double bound = 1e-08;
-	for (size_t i=coeffs.size()-1; i>=0; i--) {
+	for (size_t i=coeffs.size()-1; i>0; i--) {
 		if (abs(coeffs[i]) < bound) {
 			valid = false;
 			norm = floor(bound / pow(10, floor(log10(abs(coeffs[i])))));
@@ -109,12 +109,12 @@ void Tanh_LA(std::vector<double>& K, long n, SEALContext &context, Encryptor& en
 	// std::cout << "plain : "; print_part(decoded, n, 0, 3);
 	// std::cout << "cipher : "; decrypt_and_print_part(ctxt_temp, decryptor, encoder, n, 0, 3);
 
-	// double normN = 1e+04; // for x in [-4, 4]
-	// std::vector<double> n_inv(n, 1/normN);
-	std::vector<double> n_inv(n);
-	for (long i=0; i<n; i++) {
-		n_inv[i] = 1 / pow(10, ceil(log10(decoded[i])));
-	}
+	double normN = 1500; // 1e+04; // for x in [-4, 4]
+	std::vector<double> n_inv(n, 1/normN);
+	// std::vector<double> n_inv(n);
+	// for (long i=0; i<n; i++) {
+	// 	n_inv[i] = 1 / pow(10, ceil(log10(decoded[i])));
+	// }
 
 	// normalization
 	evaluator.multiply_vector_reduced_error(ctxt_temp, n_inv, ctxt_temp);
@@ -441,6 +441,19 @@ void GeLU_PA(std::vector<double>& K, long n, SEALContext &context, Encryptor& en
 		evaluator.multiply_vector_reduced_error(ctxt_temp, norms, ctxt_temp);
 		evaluator.rescale_to_next_inplace(ctxt_temp);
 	}
+	
+	ctxt_out = ctxt_temp;
+}
+
+/*
+ * GeLU function
+ * Reference : https://github.com/samhocevar/lolremez
+ * Input : x
+ * Output : x/2 * (1 + erf(x/sqrt(2)))
+*/
+void GeLU_NA(std::vector<double>& K, long n, SEALContext &context, Encryptor& encryptor, Evaluator& evaluator, Decryptor& decryptor, CKKSEncoder& encoder, PublicKey& pk, SecretKey& sk, RelinKeys& rlks, Ciphertext& ctxt_in, Ciphertext& ctxt_out, Timer& timer) {
+
+	Ciphertext ctxt_temp = ctxt_in;
 	
 	ctxt_out = ctxt_temp;
 }

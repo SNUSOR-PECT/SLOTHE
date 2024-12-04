@@ -34,3 +34,7 @@
 # build
 build*
 *.dot
+
+# etc
+*.vscode
+lohen_examples

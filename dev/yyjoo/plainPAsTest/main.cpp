@@ -10,17 +10,31 @@ using namespace std;
 int main(void) {
     uint32_t n = 32768;
     vector<double> x(n);
-    for(int i=0; i<n; i++) x[i] = -8.0 + 15.9 * static_cast<double>(i+1) / static_cast<double>(n);
+    for(int i=0; i<n; i++) x[i] = -4.0 + 8.0 * static_cast<double>(i+1) / static_cast<double>(n+1);
 
-    {
+    {   // Erf
         double avg_err = 0.0, max_err = -1.0;
         for (int i=0; i<n; i++) {
-            double e = exp_inv_9(x[i]); // f = exp(x/8)
-            e = pow(e, 8); // {exp(x/8)} ^8
+            double e = erf_21(x[i]); // f = exp(x/8)
 
-            double _exp = exp(x[i]); // expected val
+            double expected = erf(x[i]); // expected val
 
-            double err = fabs(_exp - e);
+            double err = fabs(expected - e);
+            avg_err += err;
+            max_err = max_err > err ? max_err : err;
+        }
+
+        std::cout << std::scientific << "avg_err = " << avg_err / static_cast<double>(n) << ", max_err = " << max_err << "\n";
+    }
+
+    {   // GeLU
+        double avg_err = 0.0, max_err = -1.0;
+        for (int i=0; i<n; i++) {
+            double e = gelu_depth1(x[i]); // f = exp(x/8)
+
+            double expected = gelu(x[i]); // expected val
+
+            double err = fabs(expected - e);
             avg_err += err;
             max_err = max_err > err ? max_err : err;
         }
