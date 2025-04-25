@@ -1,4 +1,4 @@
-CACHE: Code Approximation Compiler for Homomorphic Encryption
+SLOTHE : Lazy Approximation of Non-Arithmetic Neural Network Functions over Encrypted Data
 =========
 
 based on **LLVM 16**
