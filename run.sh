@@ -21,8 +21,12 @@ if [ $1 -eq 1 ];then
     /usr/local/bin/llvm-dis _tanh_RemoveSpecials.bc
     
     /usr/local/bin/opt -load-pass-plugin ./build/lib/libRemoveSpecials.so -passes=dot-cfg -disable-output _tanh_RemoveSpecials.ll
-    dot -Tpng -o ./assets/_tanh_RemoveSpecials.png ./._tanh.dot
-    echo -e "\n[*] A new CFG is drawn at ./assets/_tanh_RemoveSpecials.png!"
+    if dot -Tpng -o ./assets/_tanh_RemoveSpecials.png ./._tanh.dot;then
+        echo -e "\n[*] A new CFG is drawn at ./assets/_tanh_RemoveSpecials.png!"
+    else
+        echo -e "\n[*] Fail to draw a new CFG :("
+        exit 1
+    fi
     rm -rf _tanh*.bc _tanh*.ll
     rm -rf ./.*.dot
 fi
