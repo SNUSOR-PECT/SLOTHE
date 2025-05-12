@@ -36,6 +36,7 @@ struct RemoveSpecials : public llvm::PassInfoMixin<RemoveSpecials> {
 
         bool isSpecialBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst);
         bool isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst);
+        bool isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst);
 
         llvm::PreservedAnalyses run(llvm::Function &F, llvm::FunctionAnalysisManager &);
 

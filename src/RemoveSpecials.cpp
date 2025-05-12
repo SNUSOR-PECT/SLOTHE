@@ -102,10 +102,25 @@ bool RemoveSpecials::isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *b
   return isCondHighWord;
 }
 
+bool RemoveSpecials::isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
+  // the first op : C <- or A B
+  // the second op : eq C 0
+  // then this block means that if x==+-0 -> remove
+  Value* Cond = brInst->getCondition();
+
+  // First, check if the intermediate is 0
+  uint32_t opI = getConstantVal(getOperandFromCondition(Cond, 1));
+  if (opI == 0)
+    errs() << "Const is zero!\n";
+  else
+    return false;
+}
+
 PreservedAnalyses RemoveSpecials::run(llvm::Function &Func,
                                       llvm::FunctionAnalysisManager &) {
   bool specialFound = false;
   bool subnormalFound = false;
+  bool exactZeroFound = false;
   
   for (auto &BB : Func) {
     auto term = BB.getTerminator(); // check BB which contains conditional branch
@@ -129,6 +144,14 @@ PreservedAnalyses RemoveSpecials::run(llvm::Function &Func,
           errs() << "[*] BB    - isSubNormal = True detected!\n\n";
           brInst->setSuccessor(0, brInst->getSuccessor(1));
           subnormalFound = true;
+        }
+      }
+      if (!exactZeroFound) {
+        bool isSubNormal = isExactZero(&BB, brInst); // check the branch's semantic
+        if (isSubNormal) {
+          errs() << "[*] BB    - isExactZero = True detected!\n\n";
+          // brInst->setSuccessor(0, brInst->getSuccessor(1));
+          exactZeroFound = true;
         }
       }
     }

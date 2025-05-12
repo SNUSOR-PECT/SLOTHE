@@ -24,6 +24,8 @@ typedef union
 
 static const double one = 1.0, two = 2.0, tiny = 1.0e-300;
 
+extern double _tanh(double);
+
 double _tanh (double x) {
 	double t, z;
 	int32_t jx, ix, lx;
@@ -69,6 +71,6 @@ double _tanh (double x) {
 	return (jx >= 0) ? z : -z;
 }
 
-int main(void) {
-	_tanh(2.0f);
-}
+// int main(void) {
+// 	_tanh(2.0f);
+// }
