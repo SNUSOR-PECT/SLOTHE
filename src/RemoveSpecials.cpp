@@ -103,17 +103,38 @@ bool RemoveSpecials::isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *b
 }
 
 bool RemoveSpecials::isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
-  // the first op : C <- or A B
+  // the first op : C <- "or" A B
   // the second op : eq C 0
   // then this block means that if x==+-0 -> remove
   Value* Cond = brInst->getCondition();
+  bool res = false;
 
-  // First, check if the intermediate is 0
   uint32_t opI = getConstantVal(getOperandFromCondition(Cond, 1));
-  if (opI == 0)
-    errs() << "Const is zero!\n";
-  else
-    return false;
+  // if the predecessor of terminator's operator is or
+  auto it = brInst->getIterator();
+  if (it != BB->begin()) {
+    // First, check if the operator is equal and the intermediate is 0
+    --it;
+    llvm::Instruction *predInst = &*it;
+    if (auto *cmp = dyn_cast<ICmpInst>(predInst)) {
+      if ((cmp->getPredicate() == ICmpInst::ICMP_EQ) && (opI == 0)) {
+        res = true;
+      }
+    }
+
+    // Second, check if the operator is bit-or
+    if (res) {
+      --it;
+      predInst = &*it;
+      if (auto *binOp = dyn_cast<BinaryOperator>(predInst)) {
+        if (binOp->getOpcode() != llvm::Instruction::Or) {
+          res = false;
+        }
+      }
+    }
+  }
+
+  return res;
 }
 
 PreservedAnalyses RemoveSpecials::run(llvm::Function &Func,
@@ -141,16 +162,16 @@ PreservedAnalyses RemoveSpecials::run(llvm::Function &Func,
       if (!subnormalFound) {
         bool isSubNormal = isSubNormalBranch(&BB, brInst); // check the branch's semantic
         if (isSubNormal) {
-          errs() << "[*] BB    - isSubNormal = True detected!\n\n";
+          errs() << "[*] BB    - isSubNormal = True detected!\n";
           brInst->setSuccessor(0, brInst->getSuccessor(1));
           subnormalFound = true;
         }
       }
       if (!exactZeroFound) {
-        bool isSubNormal = isExactZero(&BB, brInst); // check the branch's semantic
-        if (isSubNormal) {
-          errs() << "[*] BB    - isExactZero = True detected!\n\n";
-          // brInst->setSuccessor(0, brInst->getSuccessor(1));
+        bool exactZero = isExactZero(&BB, brInst); // check the branch's semantic
+        if (exactZero) {
+          errs() << "[*] BB    - isExactZero = True detected!\n";
+          brInst->setSuccessor(0, brInst->getSuccessor(1));
           exactZeroFound = true;
         }
       }
