@@ -1,4 +1,4 @@
-#include "RemoveSpecials.h"
+#include "UnreachablePath.h"
 
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
@@ -14,22 +14,22 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "remove-specials"
+#define DEBUG_TYPE "remove-unreachable"
 
 //------------------------------------------------------------------------------
 // Util functions
 //------------------------------------------------------------------------------
-uint32_t RemoveSpecials::getConstantVal(Value* val) {
+uint32_t UnreachablePath::getConstantVal(Value* val) {
   ConstantInt *CI = dyn_cast<ConstantInt>(val);
   return CI->getSExtValue();
 }
 
-llvm::Value* RemoveSpecials::getOperandFromCondition(Value* Cond, size_t pos) {
+llvm::Value* UnreachablePath::getOperandFromCondition(Value* Cond, size_t pos) {
   ICmpInst *ICmp = dyn_cast<ICmpInst>(Cond);
   return ICmp->getOperand(pos);
 }
 
-bool RemoveSpecials::isConditionHighwordofInput(Value* Cond) {
+bool UnreachablePath::isConditionHighwordofInput(Value* Cond) {
   std::stack<llvm::Instruction*> insts;
 
   Value* op = getOperandFromCondition(Cond, 0);
@@ -70,7 +70,7 @@ bool RemoveSpecials::isConditionHighwordofInput(Value* Cond) {
 // Crucial functions
 //------------------------------------------------------------------------------
 
-bool RemoveSpecials::isSpecialBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
+bool UnreachablePath::isSpecialBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
   Value* Cond = brInst->getCondition();
 
   // First, check if the intermediate is specials(INF/NaN)
@@ -85,7 +85,7 @@ bool RemoveSpecials::isSpecialBranch(llvm::BasicBlock* BB, llvm::BranchInst *brI
   return isCondHighWord;
 }
 
-bool RemoveSpecials::isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
+bool UnreachablePath::isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
   Value* Cond = brInst->getCondition();
 
   // First, check if the intermediate is subNormal
@@ -102,7 +102,7 @@ bool RemoveSpecials::isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *b
   return isCondHighWord;
 }
 
-bool RemoveSpecials::isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
+bool UnreachablePath::isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
   // the first op : C <- "or" A B
   // the second op : eq C 0
   // then this block means that if x==+-0 -> remove
@@ -137,7 +137,7 @@ bool RemoveSpecials::isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst)
   return res;
 }
 
-PreservedAnalyses RemoveSpecials::run(llvm::Function &Func,
+PreservedAnalyses UnreachablePath::run(llvm::Function &Func,
                                       llvm::FunctionAnalysisManager &) {
   bool specialFound = false;
   bool subnormalFound = false;
@@ -188,14 +188,14 @@ PreservedAnalyses RemoveSpecials::run(llvm::Function &Func,
 //-----------------------------------------------------------------------------
 // New PM Registration
 //-----------------------------------------------------------------------------
-llvm::PassPluginLibraryInfo getRemoveSpecialsPluginInfo() {
-  return {LLVM_PLUGIN_API_VERSION, "remove-specials", LLVM_VERSION_STRING,
+llvm::PassPluginLibraryInfo getUnreachablePathPluginInfo() {
+  return {LLVM_PLUGIN_API_VERSION, "remove-unreachable", LLVM_VERSION_STRING,
           [](PassBuilder &PB) {
             PB.registerPipelineParsingCallback(
                 [](StringRef Name, FunctionPassManager &FPM,
                    ArrayRef<PassBuilder::PipelineElement>) {
-                  if (Name == "remove-specials") {
-                    FPM.addPass(RemoveSpecials(llvm::errs()));
+                  if (Name == "remove-unreachable") {
+                    FPM.addPass(UnreachablePath(llvm::errs()));
                     return true;
                   }
                   return false;
@@ -205,5 +205,5 @@ llvm::PassPluginLibraryInfo getRemoveSpecialsPluginInfo() {
 
 extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
 llvmGetPassPluginInfo() {
-  return getRemoveSpecialsPluginInfo();
+  return getUnreachablePathPluginInfo();
 }

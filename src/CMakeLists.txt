@@ -2,15 +2,15 @@
 # ======================================================
 set(LLVM_PLUGINS
     BasicTrace
-    RemoveSpecials
+    UnreachablePath
     # FunctionalityCheck
     )
 
 set(BasicTrace_SOURCES
   BasicTrace.cpp
   )
-set(RemoveSpecials_SOURCES
-  RemoveSpecials.cpp
+set(UnreachablePath_SOURCES
+  UnreachablePath.cpp
   )
 # set(FunctionalityCheck_SOURCES
 #   FunctionalityCheck.cpp
