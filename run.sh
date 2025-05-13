@@ -30,7 +30,17 @@ if [ $1 -eq 1 ];then
     rm -rf ./.*.dot
 fi
 
-#if [ $1 -eq 2 ];then
-#    echo -e "\n[*] Apply FunctionalityCheck pass\n"
-#    /usr/local/bin/opt -load-pass-plugin ./build/lib/libFunctionalityCheck.so -passes=functionality-check -disable-output _tanh.ll
-#fi
+if [ $1 -eq 2 ];then
+    echo -e "\n[*] Apply Mergeable and SimplifyCFG pass on tanh after RemoveSpecial\n"
+    /usr/local/bin/opt -load-pass-plugin ./build/lib/libMergeable.so -passes=find-mergeable,simplifycfg _tanh_UnreachablePath.ll -o _tanh_Mergeable_tmp.bc
+    /usr/local/bin/llvm-dis _tanh_Mergeable_tmp.bc
+    
+    /usr/local/bin/opt -load-pass-plugin ./build/lib/libMergeable.so -passes=dot-cfg -disable-output _tanh_Mergeable_tmp.ll
+    if dot -Tpng -o ./assets/_tanh_Mergeable_tmp.png ./._tanh.dot;then
+        echo -e "\n[*] A new CFG is drawn at ./assets/_tanh_Mergeable_tmp.png!"
+    else
+        echo -e "\n[*] Fail to draw a new CFG :("
+    fi
+    # rm -rf _tanh*.bc _tanh*.ll
+    # rm -rf ./.*.dot
+fi

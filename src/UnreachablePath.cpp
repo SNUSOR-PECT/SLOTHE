@@ -179,7 +179,7 @@ PreservedAnalyses UnreachablePath::run(llvm::Function &Func,
 
     // We currently assume that only one BB holds INF/NaN or subNormal branch among BBs.
     // Thus, since each case occurs only once throughout BBs, we break the loop
-    if (specialFound & subnormalFound) break;
+    if (specialFound & subnormalFound & exactZeroFound) break;
   }
 
   return llvm::PreservedAnalyses::all();

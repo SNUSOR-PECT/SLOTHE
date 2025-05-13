@@ -3,7 +3,7 @@
 set(LLVM_PLUGINS
     BasicTrace
     UnreachablePath
-    # FunctionalityCheck
+    Mergeable
     )
 
 set(BasicTrace_SOURCES
@@ -12,9 +12,9 @@ set(BasicTrace_SOURCES
 set(UnreachablePath_SOURCES
   UnreachablePath.cpp
   )
-# set(FunctionalityCheck_SOURCES
-#   FunctionalityCheck.cpp
-#   )
+set(Mergeable_SOURCES
+  Mergeable.cpp
+  )
 
 # CONFIGURE THE PLUGIN LIBRARIES
 # ==============================
