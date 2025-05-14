@@ -26,7 +26,7 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
 }
 
 int eraseSpecial(std::string str) {
-    std::vector<char> ch = {',', '%'};
+    std::vector<char> ch = {',', '%', ':'};
     str.erase(std::remove_if(str.begin(), str.end(),
         [&](char c) {
             return std::find(ch.begin(), ch.end(), c) != ch.end();
@@ -35,7 +35,7 @@ int eraseSpecial(std::string str) {
     return std::stoi(str);
 }
 
-void initBB(std::string path, std::map<int, std::vector<int>>& BB) {
+void initBB(std::string& path, std::vector<int>& BNums, std::map<int, std::vector<int>>& BB) {
     std::ifstream ifs(path);
     std::string line;
 
@@ -44,7 +44,6 @@ void initBB(std::string path, std::map<int, std::vector<int>>& BB) {
     } else {
         bool valid = false;
         int condCount = 0;
-        std::vector<int> BNums; // size = #cond
         while (std::getline(ifs, line)) {
             if (line.find("define") != std::string::npos) { 
                 valid = true;
@@ -70,15 +69,29 @@ void initBB(std::string path, std::map<int, std::vector<int>>& BB) {
     }
 }
 
-void getCondition(std::string path, std::vector<std::pair<std::string, int>>& cond, std::map<int, std::vector<int>> BB) {
+void getCondition(std::string& path, std::vector<std::pair<std::string, int>>& cond, std::map<int, std::vector<int>>& BB) {
     std::ifstream ifs(path);
     std::string line;
-    int curblocknum = 0;
+    int cmpIdx = 0;
 
     if (!ifs) {
         std::cerr << "Failed to open file.\n";
     } else {
         while (std::getline(ifs, line)) {
+            // override
+            if (line.find("; preds =") != std::string::npos) {
+                auto tokens = split(line, ';');
+                int curNode = eraseSpecial(tokens[0]);
+
+                tokens = split(line, '=');
+                int predNode = eraseSpecial(tokens[1]);
+                if (predNode == 1) continue; // skip
+                if (tokens.size() > 2) continue; // TODO: phi node
+                
+                for (int i=0; i<cmpIdx-1; i++) {
+                    BB[curNode][i] = BB[predNode][i];
+                }
+            }
             // get condition
             if (line.find("icmp") != std::string::npos) {
                 auto tokens = split(line, ' ');
@@ -100,7 +113,10 @@ void getCondition(std::string path, std::vector<std::pair<std::string, int>>& co
                 int truePath = eraseSpecial(tokens[6]);
                 int falsePath = eraseSpecial(tokens[8]);
 
-                std::cout << truePath << "\n" << falsePath << "\n";
+                BB[truePath][cmpIdx] = 1; // true
+                BB[falsePath][cmpIdx] = 0; // false
+
+                cmpIdx++;
             }
         }
     }
@@ -109,13 +125,22 @@ void getCondition(std::string path, std::vector<std::pair<std::string, int>>& co
 int main(void) {
     std::string path = "./_tanh_UnreachablePath.ll";
 
-    // 0. get the number of basic blocks
-    std::map<int, std::vector<int>> BB; // BBNum, conditions {-1, 0, 1}
-    initBB(path, BB);
+    // 0. get basic information of basic blocks
+    std::vector<int> BNums;
+    std::map<int, std::vector<int>> BB; // BBNum, conditions ({-1, 0, 1})
+    initBB(path, BNums, BB);
 
     // 1. get condition for left/right path for a given .ll file
     std::vector<std::pair<std::string, int>> cond;
     getCondition(path, cond, BB);
+
+    for (int i=0; i<BNums.size(); i++) {
+        std::cout << BNums[i] << ": ";
+        for (int j=0; j<BB[BNums[i]].size(); j++) {
+            std::cout << BB[BNums[i]][j] << ", ";
+        }
+        std::cout << "\n";
+    }
 
     // 2. 
 
