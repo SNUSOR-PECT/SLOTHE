@@ -8,10 +8,25 @@
 #include <vector>
 #include <cmath>
 #include <cstdint>
+#include <random>
+#include <iomanip>
 #include <utility>
 #include <map>
 
+#define debug 0
+
 extern "C" double _tanh(double); // target function
+
+const int seed = 555;
+std::default_random_engine gen{seed};
+// std::default_random_engine gen{std::random_device()};
+
+double randNum(double _min, double _max) {
+    std::uniform_int_distribution<> dist_sign(0, 1);  // 0 or 1
+    std::uniform_real_distribution<double> dist(_min, _max);
+    double val = dist(gen);
+    return val * (dist_sign(gen) == 0 ? 1.0 : -1.0);
+}
 
 std::vector<std::string> split(const std::string &s, char delimiter) {
     std::vector<std::string> tokens;
@@ -150,31 +165,41 @@ void findRange(std::map<int, std::vector<int>>& BB, std::vector<std::pair<int, s
     rangeNode = {_min, _max};
 }
 
-int main(void) {
+int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        std::cerr << "Usage: ./run <arg1> <arg2>\n";
+        return 1;
+    }
+
     std::string path = "./_tanh_UnreachablePath.ll";
 
     // 0. get basic information of basic blocks
+    // std::cout << "[*] Get basic information of basic-blocks\n";
     std::vector<int> BNums;
     std::map<int, std::vector<int>> BB; // BBNum, conditions ({-1, 0, 1})
     initBB(path, BNums, BB);
 
     // 1. get condition for left/right path for a given .ll file
+    // std::cout << "[*] Get conditional branches' condition\n";
     std::vector<std::pair<int, std::pair<std::string, double>>> cond;
     getCondition(path, cond, BB);
 
-    for (int i=0; i<BNums.size(); i++) {
-        std::cout << BNums[i] << ": ";
-        for (int j=0; j<BB[BNums[i]].size(); j++) {
-            std::cout << BB[BNums[i]][j] << ", ";
+    #if debug
+        for (int i=0; i<BNums.size(); i++) {
+            std::cout << BNums[i] << ": ";
+            for (int j=0; j<BB[BNums[i]].size(); j++) {
+                std::cout << BB[BNums[i]][j] << ", ";
+            }
+            std::cout << "\n";
         }
-        std::cout << "\n";
-    }
 
-    for (int i=0; i<cond.size(); i++) {
-        std::cout << "curNode = " << cond[i].first << " {" << cond[i].second.first << ", " << cond[i].second.second << "}\n";
-    }
+        for (int i=0; i<cond.size(); i++) {
+            std::cout << "curNode = " << cond[i].first << " {" << cond[i].second.first << ", " << cond[i].second.second << "}\n";
+        }
+    #endif
 
     // 2. detect two split path
+    // std::cout << "[*] Detect parent node and its two successor path\n";
     int nodeA, nodeB;
     // same T/Fs but different 0/1 at a certain branch
     for (int i=1; i<BNums.size(); i++) {
@@ -193,23 +218,51 @@ int main(void) {
         if (flag) break;
     }
 
-    std::cout << "nodeA = " << nodeA << "\n";
-    std::cout << "nodeB = " << nodeB << "\n";
+    #if debug
+        std::cout << "nodeA = " << nodeA << "\n";
+        std::cout << "nodeB = " << nodeB << "\n";
+    #endif
 
     // 3. find valid input range for two path
+    // std::cout << "[*] Find valid input range for two path\n";
     std::pair<double, double> rangeNodeA, rangeNodeB; // min, max
     findRange(BB, cond, nodeA, rangeNodeA);
     findRange(BB, cond, nodeB, rangeNodeB);
     
-    std::cout << "[*] nodeA\n";
-    std::cout << "_min = " << rangeNodeA.first << ", _max = " << rangeNodeA.second << "\n"; 
-    std::cout << "[*] nodeB\n";
-    std::cout << "_min = " << rangeNodeB.first << ", _max = " << rangeNodeB.second << "\n"; 
+    #if debug
+        std::cout << "[*] nodeA\n";
+        std::cout << "_min = " << rangeNodeA.first << ", _max = " << rangeNodeA.second << "\n"; 
+        std::cout << "[*] nodeB\n";
+        std::cout << "_min = " << rangeNodeB.first << ", _max = " << rangeNodeB.second << "\n"; 
+    #endif
 
-    // double x = 1.0;
-    // double y = _tanh(x);
-    // printf("tanh(%f) = %f\n", x, y);
-    // printf("Answer tanh(%f) = %f\n", x, tanh(x));
+    // 4. get random sample values for the input range
+    int cnt = 100;
+    double _min, _max;
+    std::vector<double> res(cnt, 0.0);
+    if (*argv[1] == 'T') {
+        // select input range for True path
+        _min = rangeNodeA.first;
+        _max = rangeNodeA.second;
+    } else if (*argv[1] == 'F') {
+        // select input range for True path
+        _min = rangeNodeB.first;
+        _max = rangeNodeB.second;
+    }
+
+    std::string filename = std::string(argv[1])+std::string(argv[2])+".txt";
+    std::ofstream ofs(filename);
+    if (!ofs) {
+        std::cerr << "Failed to open file.\n";
+        return 0;
+    } else {
+        ofs << std::setprecision(17);
+        for (int i=0; i<cnt; i++) {
+            double x = randNum(_min, _max);
+            res[i] = _tanh(x);
+            ofs << res[i] << "\n";
+        }
+    }
 
     return 0;
 }

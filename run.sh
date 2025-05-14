@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -le 0 ];then
-    echo -e "(Error) Enter the option: 0, 1 \n./run.sh [option]"
+    echo -e "(Error) Enter the option: 0, 1, 2 \n./run.sh [option]"
     exit
 fi
 
@@ -32,15 +32,20 @@ fi
 
 if [ $1 -eq 2 ];then
     echo -e "\n[*] Apply Mergeable and SimplifyCFG pass on tanh after RemoveSpecial\n"
-    /usr/local/bin/opt -load-pass-plugin ./build/lib/libMergeable.so -passes=find-mergeable,simplifycfg _tanh_UnreachablePath.ll -o _tanh_Mergeable_tmp.bc
-    /usr/local/bin/llvm-dis _tanh_Mergeable_tmp.bc
+    /usr/local/bin/opt -load-pass-plugin ./build/lib/libMergeable.so -passes=find-mergeable,simplifycfg _tanh_UnreachablePath.ll -o _tanh_Mergeable_swapped.bc
+    /usr/local/bin/llvm-dis _tanh_Mergeable_swapped.bc
     
-    /usr/local/bin/opt -load-pass-plugin ./build/lib/libMergeable.so -passes=dot-cfg -disable-output _tanh_Mergeable_tmp.ll
-    if dot -Tpng -o ./assets/_tanh_Mergeable_tmp.png ./._tanh.dot;then
-        echo -e "\n[*] A new CFG is drawn at ./assets/_tanh_Mergeable_tmp.png!"
+    /usr/local/bin/opt -load-pass-plugin ./build/lib/libMergeable.so -passes=dot-cfg -disable-output _tanh_Mergeable_swapped.ll
+    if dot -Tpng -o ./assets/_tanh_Mergeable_swapped.png ./._tanh.dot;then
+        echo -e "\n[*] A new CFG is drawn at ./assets/_tanh_Mergeable_swapped.png!"
     else
         echo -e "\n[*] Fail to draw a new CFG :("
     fi
     # rm -rf _tanh*.bc _tanh*.ll
     # rm -rf ./.*.dot
+fi
+
+if [ $1 -eq 9 ];then
+    rm -rf *.bc *.ll *.o ./.*.dot
+    rm -rf T0.txt T1.txt F0.txt F1.txt
 fi
