@@ -13,3 +13,9 @@
 ./runFunc F 0
 
 rm -rf *.o runFunc
+
+# Check mergeability
+/usr/local/bin/clang++ isMergeable.cpp -o isMergeable -lm
+# /usr/local/bin/clang++ isMergeable.cpp isMergeable.o -o isMergeable -lm
+isMergeable=$(./isMergeable 6)
+echo "isMergeable? : $isMergeable"
