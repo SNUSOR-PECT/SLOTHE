@@ -4,6 +4,7 @@ set(LLVM_PLUGINS
     BasicTrace
     UnreachablePath
     Mergeable
+    Merge
     )
 
 set(BasicTrace_SOURCES
@@ -14,6 +15,9 @@ set(UnreachablePath_SOURCES
   )
 set(Mergeable_SOURCES
   Mergeable.cpp
+  )
+set(Merge_SOURCES
+  Merge.cpp
   )
 
 # CONFIGURE THE PLUGIN LIBRARIES

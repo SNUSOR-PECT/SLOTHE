@@ -14,7 +14,7 @@ if [ $1 -eq 0 ];then
 fi
 
 if [ $1 -eq 1 ];then
-    echo -e "\n[*] Apply RemoveSpecial and SimplifyCFG pass on tanh\n"
+    echo -e "\n[*] Apply UnreachablePath and SimplifyCFG pass on tanh\n"
     /usr/local/bin/clang -O2 -c -emit-llvm ./math/_tanh.c -o _tanh.bc
     /usr/local/bin/llvm-dis _tanh.bc # output: _tanh.ll
     /usr/local/bin/opt -load-pass-plugin ./build/lib/libUnreachablePath.so -passes=remove-unreachable,simplifycfg _tanh.ll -o _tanh_UnreachablePath.bc
