@@ -6,6 +6,7 @@
 #include "llvm/Pass.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ADT/STLExtras.h"
 
@@ -20,7 +21,11 @@ using namespace llvm;
 //------------------------------------------------------------------------------
 // Util functions
 //------------------------------------------------------------------------------
-
+static cl::opt<bool> MergeDirection(
+    "merge-direction",
+    cl::desc("Direction to merge"),
+    cl::init(false)
+);
 
 //------------------------------------------------------------------------------
 // Crucial functions
@@ -35,7 +40,12 @@ PreservedAnalyses Merge::run(llvm::Function &Func,
     BranchInst *brInst = dyn_cast<BranchInst>(term);
     if ( brInst && (brInst->isConditional())) {
         // Merge to one path
-        brInst->setSuccessor(1, brInst->getSuccessor(0));
+        if (MergeDirection) { // True
+            brInst->setSuccessor(0, brInst->getSuccessor(1));
+        } else { // False
+            brInst->setSuccessor(1, brInst->getSuccessor(0));
+        }
+        // brInst->setSuccessor(1, brInst->getSuccessor(0));
         break;
     }
   }

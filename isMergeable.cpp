@@ -52,8 +52,15 @@ int main(int argc, char* argv[]) {
         delta_2 = diff2 > delta_2 ? diff2 : delta_2;
     }
     double delta = delta_1 < delta_2 ? delta_1 : delta_2;
+    bool isMergeable = (delta < pow(10, -std::stoi(argv[1])));
 
-    std::cout << (delta < pow(10, -std::stoi(argv[1])));
-    return (delta < pow(10, -std::stoi(argv[1]))); // mergeable
+    if (isMergeable) {
+        if (delta_1 <= delta_2) std::cout << "1";
+        else std::cout << "0";
+    } else {
+        std::cout << "-1";
+    }
+
+    return isMergeable; // mergeable
 
 }

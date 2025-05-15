@@ -166,12 +166,13 @@ void findRange(std::map<int, std::vector<int>>& BB, std::vector<std::pair<int, s
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        std::cerr << "Usage: ./run <arg1> <arg2>\n";
+    if (argc < 4) {
+        std::cerr << "Usage: ./run <arg1> <arg2> <arg3>\n";
         return 1;
     }
 
-    std::string path = "./_tanh_UnreachablePath.ll";
+    // std::string path = "./_tanh_UnreachablePath.ll";
+    std::string path = "./" + std::string(argv[3]) + ".ll";
 
     // 0. get basic information of basic blocks
     // std::cout << "[*] Get basic information of basic-blocks\n";
