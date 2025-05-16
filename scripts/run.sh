@@ -16,7 +16,11 @@ bash ./scripts/pathMerge.sh _tanh_Merged1 _tanh_Merged2
 # 4. Check the validity of baseline function and optimized function
 bash ./scripts/checkValid.sh _tanh_Merged2
 
-# 5. Clean files
+# 5. (Optional) Apply additional optimization
+bash ./scripts/Optional.sh _tanh_Merged2 optim
+bash ./scripts/checkValid.sh optim
+
+# 6. Clean files
 rm -rf temp/*
 rm -rf ./.*.dot
 rm -rf T0.txt T1.txt F0.txt F1.txt

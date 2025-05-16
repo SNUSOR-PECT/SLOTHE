@@ -38,11 +38,11 @@ int main(int argc, char* argv[]) {
         double x = randNum(_min, _max);
         double y = tanh(x);
         res[i] = _tanh(x);
-        // std::cout << y << ", " << res[i] << "\n";
-        // double diff = std::abs(y - res[i]);
-        // std::cout << diff << "\n";
+        
         double diff = std::abs(y - res[i]);
         delta = diff > delta ? diff : delta;
+
+        // std::cout << y << ", " << res[i] << "\n";
     }
     
     bool isValid = (delta < pow(10, -std::stoi(argv[1])));
