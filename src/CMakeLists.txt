@@ -2,7 +2,7 @@
 # ======================================================
 set(LLVM_PLUGINS
     BasicTrace
-    UnreachablePath
+    Unreachable
     Mergeable
     Merge
     )
@@ -10,8 +10,8 @@ set(LLVM_PLUGINS
 set(BasicTrace_SOURCES
   BasicTrace.cpp
   )
-set(UnreachablePath_SOURCES
-  UnreachablePath.cpp
+set(Unreachable_SOURCES
+  Unreachable.cpp
   )
 set(Mergeable_SOURCES
   Mergeable.cpp

@@ -35,10 +35,10 @@ int main(int argc, char* argv[]) {
 
     // T0 T1 for delta_1, F0 F1 for delta_2
     std::vector<double> T0, T1, F0, F1;
-    std::string pathT0 = "T0.txt";
-    std::string pathT1 = "T1.txt";
-    std::string pathF0 = "F0.txt";
-    std::string pathF1 = "F1.txt";
+    std::string pathT0 = "../T0.txt";
+    std::string pathT1 = "../T1.txt";
+    std::string pathF0 = "../F0.txt";
+    std::string pathF1 = "../F1.txt";
     loadVals(T0, pathT0);
     loadVals(T1, pathT1);
     loadVals(F0, pathF0);

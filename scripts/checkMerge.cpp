@@ -171,8 +171,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // std::string path = "./_tanh_UnreachablePath.ll";
-    std::string path = "./" + std::string(argv[3]) + ".ll";
+    std::string path = "./temp/" + std::string(argv[3]) + ".ll";
 
     // 0. get basic information of basic blocks
     // std::cout << "[*] Get basic information of basic-blocks\n";
@@ -251,7 +250,7 @@ int main(int argc, char* argv[]) {
         _max = rangeNodeB.second;
     }
 
-    std::string filename = std::string(argv[1])+std::string(argv[2])+".txt";
+    std::string filename = "../"+std::string(argv[1])+std::string(argv[2])+".txt";
     std::ofstream ofs(filename);
     if (!ofs) {
         std::cerr << "Failed to open file.\n";

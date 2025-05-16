@@ -32,16 +32,23 @@ int main(int argc, char* argv[]) {
     int cnt = 100;
     double _min=-22, _max=22;
     std::vector<double> res(cnt, 0.0);
+    double delta = 0.0;
 
     for (int i=0; i<cnt; i++) {
         double x = randNum(_min, _max);
         double y = tanh(x);
         res[i] = _tanh(x);
-        std::cout << y << ", " << res[i] << "\n";
+        // std::cout << y << ", " << res[i] << "\n";
         // double diff = std::abs(y - res[i]);
         // std::cout << diff << "\n";
+        double diff = std::abs(y - res[i]);
+        delta = diff > delta ? diff : delta;
     }
     
+    bool isValid = (delta < pow(10, -std::stoi(argv[1])));
+
+    if (isValid) std::cout << "\nValid\n";
+    else std::cout << "\nInvalid\n";
 
     return 0;
 }

@@ -32,8 +32,10 @@
 *.app
 
 # build
-build*
+build/
 *.dot
+*.ll
+*.bc
 
 # etc
 *.vscode

@@ -1,16 +1,16 @@
 //==============================================================================
 // FILE:
-//    UnreachablePath.h
+//    Unreachable.h
 //
 // DESCRIPTION:
-//    Declares the UnreachablePath Passes:
+//    Declares the Unreachable Passes:
 //      * new pass manager interface
 //      * printer pass for the new pass manager
 //
 // License: MIT
 //==============================================================================
-#ifndef LLVM_TUTOR_UnreachablePath_H
-#define LLVM_TUTOR_UnreachablePath_H
+#ifndef LLVM_TUTOR_Unreachable_H
+#define LLVM_TUTOR_Unreachable_H
 
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/Instructions.h"
@@ -26,9 +26,9 @@
 // New PM interface
 //------------------------------------------------------------------------------
 
-struct UnreachablePath : public llvm::PassInfoMixin<UnreachablePath> {
+struct Unreachable : public llvm::PassInfoMixin<Unreachable> {
     public:
-        explicit UnreachablePath(llvm::raw_ostream &OutS) : OS(OutS) {}
+        explicit Unreachable(llvm::raw_ostream &OutS) : OS(OutS) {}
         
         uint32_t getConstantVal(llvm::Value* val);
         llvm::Value* getOperandFromCondition(llvm::Value* Cond, size_t pos);

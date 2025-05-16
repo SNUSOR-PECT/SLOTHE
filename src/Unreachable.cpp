@@ -1,4 +1,4 @@
-#include "UnreachablePath.h"
+#include "Unreachable.h"
 
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
@@ -19,17 +19,17 @@ using namespace llvm;
 //------------------------------------------------------------------------------
 // Util functions
 //------------------------------------------------------------------------------
-uint32_t UnreachablePath::getConstantVal(Value* val) {
+uint32_t Unreachable::getConstantVal(Value* val) {
   ConstantInt *CI = dyn_cast<ConstantInt>(val);
   return CI->getSExtValue();
 }
 
-llvm::Value* UnreachablePath::getOperandFromCondition(Value* Cond, size_t pos) {
+llvm::Value* Unreachable::getOperandFromCondition(Value* Cond, size_t pos) {
   ICmpInst *ICmp = dyn_cast<ICmpInst>(Cond);
   return ICmp->getOperand(pos);
 }
 
-bool UnreachablePath::isConditionHighwordofInput(Value* Cond) {
+bool Unreachable::isConditionHighwordofInput(Value* Cond) {
   std::stack<llvm::Instruction*> insts;
 
   Value* op = getOperandFromCondition(Cond, 0);
@@ -70,7 +70,7 @@ bool UnreachablePath::isConditionHighwordofInput(Value* Cond) {
 // Crucial functions
 //------------------------------------------------------------------------------
 
-bool UnreachablePath::isSpecialBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
+bool Unreachable::isSpecialBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
   Value* Cond = brInst->getCondition();
 
   // First, check if the intermediate is specials(INF/NaN)
@@ -85,7 +85,7 @@ bool UnreachablePath::isSpecialBranch(llvm::BasicBlock* BB, llvm::BranchInst *br
   return isCondHighWord;
 }
 
-bool UnreachablePath::isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
+bool Unreachable::isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
   Value* Cond = brInst->getCondition();
 
   // First, check if the intermediate is subNormal
@@ -102,7 +102,7 @@ bool UnreachablePath::isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *
   return isCondHighWord;
 }
 
-bool UnreachablePath::isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
+bool Unreachable::isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
   // the first op : C <- "or" A B
   // the second op : eq C 0
   // then this block means that if x==+-0 -> remove
@@ -137,7 +137,7 @@ bool UnreachablePath::isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst
   return res;
 }
 
-PreservedAnalyses UnreachablePath::run(llvm::Function &Func,
+PreservedAnalyses Unreachable::run(llvm::Function &Func,
                                       llvm::FunctionAnalysisManager &) {
   bool specialFound = false;
   bool subnormalFound = false;
@@ -154,7 +154,7 @@ PreservedAnalyses UnreachablePath::run(llvm::Function &Func,
           if (isSpecials) {
               // remove branch by setting the same successor on both True/False branch
               // To remove other successors, apply simplify-cfg pass would be good choice :) 
-              errs() << "[*] BB    - isSpecials = True detected!\n";
+              // errs() << "[*] BB    - isSpecials = True detected!\n";
               brInst->setSuccessor(0, brInst->getSuccessor(1));
               specialFound = true;
           }
@@ -162,7 +162,7 @@ PreservedAnalyses UnreachablePath::run(llvm::Function &Func,
       if (!subnormalFound) {
         bool isSubNormal = isSubNormalBranch(&BB, brInst); // check the branch's semantic
         if (isSubNormal) {
-          errs() << "[*] BB    - isSubNormal = True detected!\n";
+          // errs() << "[*] BB    - isSubNormal = True detected!\n";
           brInst->setSuccessor(0, brInst->getSuccessor(1));
           subnormalFound = true;
         }
@@ -170,7 +170,7 @@ PreservedAnalyses UnreachablePath::run(llvm::Function &Func,
       if (!exactZeroFound) {
         bool exactZero = isExactZero(&BB, brInst); // check the branch's semantic
         if (exactZero) {
-          errs() << "[*] BB    - isExactZero = True detected!\n";
+          // errs() << "[*] BB    - isExactZero = True detected!\n";
           brInst->setSuccessor(0, brInst->getSuccessor(1));
           exactZeroFound = true;
         }
@@ -188,14 +188,14 @@ PreservedAnalyses UnreachablePath::run(llvm::Function &Func,
 //-----------------------------------------------------------------------------
 // New PM Registration
 //-----------------------------------------------------------------------------
-llvm::PassPluginLibraryInfo getUnreachablePathPluginInfo() {
+llvm::PassPluginLibraryInfo getUnreachablePluginInfo() {
   return {LLVM_PLUGIN_API_VERSION, "remove-unreachable", LLVM_VERSION_STRING,
           [](PassBuilder &PB) {
             PB.registerPipelineParsingCallback(
                 [](StringRef Name, FunctionPassManager &FPM,
                    ArrayRef<PassBuilder::PipelineElement>) {
                   if (Name == "remove-unreachable") {
-                    FPM.addPass(UnreachablePath(llvm::errs()));
+                    FPM.addPass(Unreachable(llvm::errs()));
                     return true;
                   }
                   return false;
@@ -205,5 +205,5 @@ llvm::PassPluginLibraryInfo getUnreachablePathPluginInfo() {
 
 extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
 llvmGetPassPluginInfo() {
-  return getUnreachablePathPluginInfo();
+  return getUnreachablePluginInfo();
 }

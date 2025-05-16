@@ -34,7 +34,7 @@ PreservedAnalyses Mergeable::run(llvm::Function &Func,
     // errs() << *term << "\n";
     BranchInst *brInst = dyn_cast<BranchInst>(term);
     if ( brInst && (brInst->isConditional())) {
-        errs() << "Before swap: " << *brInst << "\n";
+        // errs() << "Before swap: " << *brInst << "\n";
         // Swap the successors
         BasicBlock *succ0 = brInst->getSuccessor(0);
         BasicBlock *succ1 = brInst->getSuccessor(1);
@@ -43,7 +43,7 @@ PreservedAnalyses Mergeable::run(llvm::Function &Func,
         brInst->setSuccessor(1, succ0);
 
         // Print after swap
-        errs() << "After swap: " << *brInst << "\n";
+        // errs() << "After swap: " << *brInst << "\n";
 
         // Currently, we only try the checking process at the last branch
         break;
