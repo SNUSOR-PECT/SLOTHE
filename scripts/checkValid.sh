@@ -12,4 +12,4 @@ src=$1
 /usr/local/bin/clang++ scripts/checkPrec.cpp $1.o -o checkPrec -lm
 ./checkPrec 6
 
-rm -rf checkPrec
+rm -rf checkPrec $1.o
