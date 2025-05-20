@@ -29,8 +29,8 @@ double randNum(double _min, double _max) {
 }
 
 int main(int argc, char* argv[]) {
-    int cnt = 100;
-    double _min=-22, _max=22;
+    int cnt = 10000;
+    double _min=-4, _max=4;
     std::vector<double> res(cnt, 0.0);
     double delta = 0.0;
 
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
         double diff = std::abs(y - res[i]);
         delta = diff > delta ? diff : delta;
 
-        // std::cout << y << ", " << res[i] << "\n";
+        std::cout << y << ", " << res[i] << "\n";
     }
     
     bool isValid = (delta < pow(10, -std::stoi(argv[1])));

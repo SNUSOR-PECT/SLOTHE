@@ -5,6 +5,7 @@ set(LLVM_PLUGINS
     Unreachable
     Mergeable
     Merge
+    ReplaceFunc
     )
 
 set(BasicTrace_SOURCES
@@ -18,6 +19,9 @@ set(Mergeable_SOURCES
   )
 set(Merge_SOURCES
   Merge.cpp
+  )
+set(ReplaceFunc_SOURCES
+  ReplaceFunc.cpp
   )
 
 # CONFIGURE THE PLUGIN LIBRARIES
