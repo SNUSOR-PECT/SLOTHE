@@ -25,4 +25,13 @@ lolremez --double -r "-8:8" "$2(x)" -d 21 > temp/temp_$2.c
 /usr/local/bin/llvm-link $1 temp/temp_$2.ll -S -o temp/merged.ll
 
 # 4. run ReplaceFunc pass
-/usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceFunc.so -passes=replace-func -target-func=$2 -S -o temp/$3.ll temp/merged.ll
+# Output
+# - NAF is replaced with approximated function
+# - The function returns the input of div
+/usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceFunc.so -passes=replace-func,dce -target-func=$2 -S -o temp/temp_$3.ll temp/merged.ll
+
+# 5. find maximum value of the input of div
+/usr/local/bin/llc -filetype=obj temp/temp_$3.ll -o temp_$3.o
+/usr/local/bin/clang++ ./scripts/checkMax.cpp temp_$3.o -o checkMax -lm
+divMax=$(./checkMax)
+echo "divMax : $divMax"

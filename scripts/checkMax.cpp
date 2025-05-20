@@ -32,23 +32,17 @@ int main(int argc, char* argv[]) {
     int cnt = 10000;
     double _min=-4, _max=4;
     std::vector<double> res(cnt, 0.0);
-    double delta = 0.0;
+    double abs_max = 0.0;
 
     for (int i=0; i<cnt; i++) {
         double x = randNum(_min, _max);
-        double y = tanh(x);
-        res[i] = _tanh(x);
+        res[i] = _tanh(x); // expected input of div func
         
-        double diff = std::abs(y - res[i]);
-        delta = diff > delta ? diff : delta;
+        abs_max = std::abs(res[i]) > abs_max ? std::abs(res[i]) : abs_max;
 
-        // std::cout << y << ", " << res[i] << "\n";
     }
-    
-    bool isValid = (delta < pow(10, -std::stoi(argv[1])));
 
-    if (isValid) std::cout << "\nValid\n";
-    else std::cout << "\nInvalid\n";
+    std::cout << abs_max << "\n";
 
     return 0;
 }
