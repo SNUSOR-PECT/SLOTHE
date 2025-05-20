@@ -5,9 +5,6 @@ if [ "$#" -ne 2 ]; then
   exit 1
 fi
 
-src=$1
-tag=$2
-
 # Apply Mergeable and SimplifyCFG pass
 echo -e "\n[*] Apply Mergeable and SimplifyCFG pass on tanh\n"
 /usr/local/bin/opt -load-pass-plugin ./build/lib/libMergeable.so -passes=find-mergeable,simplifycfg ./temp/$1.ll -o ./temp/$1_swapped.bc
