@@ -30,7 +30,7 @@ double randNum(double _min, double _max) {
 
 int main(int argc, char* argv[]) {
     int cnt = 10000;
-    double _min=-4, _max=4;
+    double _min=std::stoi(argv[2]), _max=std::stoi(argv[3]);
     std::vector<double> res(cnt, 0.0);
     // double delta = 0.0;
     int failCnt = 0;

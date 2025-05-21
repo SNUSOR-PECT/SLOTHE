@@ -87,7 +87,7 @@ PreservedAnalyses GetDivisorRange::run(llvm::Function &Func,
 
     // Safety check
     if (!fdiv_detected) {
-      errs() << "No fdiv found\n";
+      // errs() << "No fdiv found\n";
       return PreservedAnalyses::all();
     }
 

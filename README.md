@@ -5,10 +5,20 @@ based on **LLVM 16**
 
 ### Build (We assume that llvm16 is installed at /usr/local)
 ```bash
-./scripts/build.sh
+bash ./scripts/build.sh
 ```
 
-### Run
+### Run FHE-aware Code Optimization on Tanh
 ```bash
-./scripts/run.sh
+bash ./scripts/run.sh 4 -4 4
+```
+
+### Run FBA on optimized IRB of Tanh
+```bash
+bash ./scripts/run_FBA.sh temp/optim.ll expm1 new_tanh 4 -4 4
+```
+
+### Clean all generated temporal files
+```bash
+bash ./scripts/clean.sh
 ```

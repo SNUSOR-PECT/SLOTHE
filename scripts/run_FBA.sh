@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ "$#" -ne 3 ]; then
-  echo "Usage: $0 <source> <target> <output>"
+if [ "$#" -ne 6 ]; then
+  echo "Usage: $0 <source> <target> <output> <precision> <min> <max>"
   exit 1
 fi
 
@@ -36,7 +36,7 @@ lolremez --double -r "-8:8" "$2(x)" -d 21 > temp/temp_$2.c
 /usr/local/bin/llc -filetype=obj temp/temp_$3.ll -o temp_$3.o
 /usr/local/bin/clang++ ./scripts/checkMax.cpp temp_$3.o -o checkMax -lm
 divMax=$(./checkMax)
-echo "divMax : $divMax"
+# echo "divMax : $divMax"
 
 # 6. compile approximated divide (inverse)
 /usr/local/bin/clang -O2 -c -emit-llvm math/_inverse.c -o temp/_inverse.bc
@@ -48,6 +48,8 @@ echo "divMax : $divMax"
 
 # 8. run ReplaceDiv pass
 /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceDiv.so -passes=replace-div,dce -div-max=$divMax -iter-d=14 -S -o temp/result.ll temp/merged_div.ll
+cp temp/result.ll results/
+echo "[*] The result is created in results/result.ll !"
 
 # 9. check validity
-bash ./scripts/checkValid.sh result 4
+bash ./scripts/checkValid.sh result $4 $5 $6
