@@ -200,7 +200,7 @@ int main(int argc, char* argv[]) {
 
     // 2. detect two split path
     // std::cout << "[*] Detect parent node and its two successor path\n";
-    int nodeA, nodeB;
+    int nodeA=0, nodeB=0;
     // same T/Fs but different 0/1 at a certain branch
     for (int i=1; i<BNums.size(); i++) {
         nodeA = BNums[i-1];

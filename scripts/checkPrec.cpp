@@ -32,7 +32,8 @@ int main(int argc, char* argv[]) {
     int cnt = 10000;
     double _min=-4, _max=4;
     std::vector<double> res(cnt, 0.0);
-    double delta = 0.0;
+    // double delta = 0.0;
+    int failCnt = 0;
 
     for (int i=0; i<cnt; i++) {
         double x = randNum(_min, _max);
@@ -40,15 +41,17 @@ int main(int argc, char* argv[]) {
         res[i] = _tanh(x);
         
         double diff = std::abs(y - res[i]);
-        delta = diff > delta ? diff : delta;
+        // delta = diff > delta ? diff : delta;
+        if (diff > pow(10, -std::stoi(argv[1]))) failCnt++;
 
         // std::cout << y << ", " << res[i] << "\n";
     }
     
-    bool isValid = (delta < pow(10, -std::stoi(argv[1])));
+    // bool isValid = (delta < pow(10, -std::stoi(argv[1])));
+    // if (isValid) std::cout << "\nValid\n";
+    // else std::cout << "\nInvalid\n";
 
-    if (isValid) std::cout << "\nValid\n";
-    else std::cout << "\nInvalid\n";
+    std::cout << "Failure rate = " << failCnt/(double)cnt*100 << "%\n";
 
     return 0;
 }

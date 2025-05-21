@@ -6,6 +6,8 @@ set(LLVM_PLUGINS
     Mergeable
     Merge
     ReplaceFunc
+    ReplaceDiv
+    GetDivisorRange
     )
 
 set(BasicTrace_SOURCES
@@ -22,6 +24,12 @@ set(Merge_SOURCES
   )
 set(ReplaceFunc_SOURCES
   ReplaceFunc.cpp
+  )
+set(ReplaceDiv_SOURCES
+  ReplaceDiv.cpp
+  )
+set(GetDivisorRange_SOURCES
+  GetDivisorRange.cpp
   )
 
 # CONFIGURE THE PLUGIN LIBRARIES
