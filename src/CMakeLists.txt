@@ -5,6 +5,8 @@ set(LLVM_PLUGINS
     Unreachable
     Mergeable
     Merge
+    OpAnalyzer
+    GetFuncRange
     ReplaceFunc
     ReplaceDiv
     GetDivisorRange
@@ -21,6 +23,12 @@ set(Mergeable_SOURCES
   )
 set(Merge_SOURCES
   Merge.cpp
+  )
+set(OpAnalyzer_SOURCES
+  OpAnalyzer.cpp
+  )
+set(GetFuncRange_SOURCES
+  GetFuncRange.cpp
   )
 set(ReplaceFunc_SOURCES
   ReplaceFunc.cpp

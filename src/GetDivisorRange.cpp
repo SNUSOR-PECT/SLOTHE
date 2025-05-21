@@ -17,12 +17,6 @@ using namespace llvm;
 //------------------------------------------------------------------------------
 // Util functions
 //------------------------------------------------------------------------------
-static cl::opt<std::string> TargetFunc(
-    "target-func",
-    cl::desc("Target function name"),
-    cl::value_desc("function name"),
-    cl::init("")
-);
 
 bool isDerivedFrom(Value *V, Value *target) {
     if (V == target) return true;
@@ -49,26 +43,6 @@ PreservedAnalyses GetDivisorRange::run(llvm::Function &Func,
     Function *fFunc = M->getFunction("f");
     if (!fFunc)
         return PreservedAnalyses::all(); // Skip if `f` is not linked
-
-    // 1. detect function call
-    for (auto &BB : Func) {
-        for (auto &I : BB) {
-          if (auto *call = dyn_cast<CallInst>(&I)) {
-              Function *calledFunc = call->getCalledFunction();
-              if (calledFunc && calledFunc->getName() == TargetFunc) {
-                  IRBuilder<> Builder(call);
-                  Value *arg = call->getArgOperand(0);
-
-                  auto *newCall = Builder.CreateCall(fFunc, {arg});
-                  call->replaceAllUsesWith(newCall);
-                  call->eraseFromParent();
-                  Changed = true;
-                  errs() << TargetFunc << " is replaced\n";
-                  break; // iterator is invalidated, safe break
-              }
-          }
-        }
-    }
 
     // 2. detect division
     Value* fdiv_detected = nullptr;

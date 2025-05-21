@@ -10,11 +10,13 @@ bash ./scripts/build.sh
 
 ### Run FHE-aware Code Optimization on Tanh
 ```bash
+# bash ./scripts/run.sh <precision> <min> <max>
 bash ./scripts/run.sh 4 -4 4
 ```
 
 ### Run FBA on optimized IRB of Tanh
 ```bash
+# bash ./scripts/run_FBA.sh <source> <target sub-func> <output> <precision> <min> <max>
 bash ./scripts/run_FBA.sh temp/optim.ll expm1 new_tanh 4 -4 4
 ```
 

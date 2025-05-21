@@ -2,5 +2,5 @@
 
 # Clean temporal files
 rm -rf temp
-rm -rf ./.*.dot
+rm -rf ./.*.dot *.o
 rm -rf T0.txt T1.txt F0.txt F1.txt
