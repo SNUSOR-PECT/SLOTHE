@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -ne 6 ]; then
-  echo "Usage: $0 <NAF> <source> <output> <precision> <min> <max>"
+  echo "Usage: $0 <NAF> <source> <precision> <min> <max>"
   exit 1
 fi
 
@@ -24,8 +24,8 @@ for f in "${subfuncTbl[@]}"; do
   /usr/local/bin/opt -load-pass-plugin ./build/lib/libGetFuncRange.so -passes=get-func-range,dce -target-func=$f -S -o temp/temp_$f.ll $2
   /usr/local/bin/llc -filetype=obj temp/temp_$f.ll -o temp_$f.o
   /usr/local/bin/clang++ ./scripts/checkMax.cpp temp_$f.o -o checkMax -lm
-  fMax=$(./checkMax $5 $6)
-  echo "($5, $6) fMax : $fMax"
+  fMax=$(./checkMax $4 $5)
+  echo "($4, $5) fMax : $fMax"
 
   found=0
   for deg in $(seq 11 2 27); do
@@ -43,8 +43,8 @@ for f in "${subfuncTbl[@]}"; do
     /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceFunc.so -passes=replace-func,dce -target-func=$f -S -o temp/replaced.ll temp/merged.ll
 
     # 5. check the validity of current PA for sub-func (UDC Tracker)
-    tmp=$(bash ./scripts/checkValid.sh replaced $4 $5 $6)
-    fRate=$(echo "$tmp" | awk '{print $4}' | tr -d '%')
+    tmp=$(bash ./scripts/checkValid.sh replaced $3 $4 $5)
+    fRate=$(echo "$tmp" | awk '{print $3}' | tr -d '%')
     if [[ "$fRate" == "0" ]]; then
         echo "Minimum approximation degree of $f = $deg"
         found=1
@@ -56,7 +56,7 @@ for f in "${subfuncTbl[@]}"; do
 
   if [[ $found -eq 0 ]]; then
     echo "PA is not found, pass $f to CF-optimizer"
-    bash ./scripts/cf_optimizer.sh $f $3 -$fMax $fMax
+    bash ./scripts/cf_optimizer.sh $f $1_div -$fMax $fMax
     subfuncTbl+=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -S -disable-output temp/$f_optim.ll 2>&1))
 
     # Apply 4) New IRB structure of $f by linking $f and PA
@@ -69,10 +69,10 @@ done
 # Output
 # - NAF is replaced with approximated function
 # - The function returns the input of div
-/usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so -passes=get-div-range,dce -S -o temp/temp_$3.ll temp/temp_$1.ll
-/usr/local/bin/llc -filetype=obj temp/temp_$3.ll -o temp_$3.o
-/usr/local/bin/clang++ ./scripts/checkMax.cpp temp_$3.o -o checkMax -lm
-divMax=$(./checkMax $5 $6)
+/usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so -passes=get-div-range,dce -S -o temp/temp_$1_div.ll temp/temp_$1.ll
+/usr/local/bin/llc -filetype=obj temp/temp_$1_div.ll -o temp_$1_div.o
+/usr/local/bin/clang++ ./scripts/checkMax.cpp temp_$1_div.o -o checkMax -lm
+divMax=$(./checkMax $4 $5)
 echo "divMax : $divMax"
 
 # 6. compile approximated divide (inverse)
@@ -88,8 +88,8 @@ for d in $(seq 11 1 17); do
   /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceDiv.so -passes=replace-div,dce -div-max=$divMax -iter-d=$d -S -o temp/$1_result.ll temp/merged_div.ll
 
   # 5. check the validity of current approximated polynomial for sub-func
-  tmp=$(bash ./scripts/checkValid.sh $1_result $4 $5 $6)
-  fRate2=$(echo "$tmp" | awk '{print $4}' | tr -d '%')
+  tmp=$(bash ./scripts/checkValid.sh $1_result $3 $4 $5)
+  fRate2=$(echo "$tmp" | awk '{print $3}' | tr -d '%')
   if [[ "$fRate2" == "0" ]]; then
       echo "Minimum d = $d"
       cp temp/$1_result.ll results/

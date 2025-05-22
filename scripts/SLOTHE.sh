@@ -14,6 +14,6 @@ fi
 bash ./scripts/cf_optimizer.sh $1 $2 $3 $4
 
 # 2. run Funtion Body Analysis
-bash ./scripts/run_FBA.sh $1 temp/$1_optim.ll new_$1 $2 $3 $4
+bash ./scripts/run_FBA.sh $1 temp/$1_optim.ll $2 $3 $4
 
 echo "[*] The final IRB is created in results/$1_result.ll !"

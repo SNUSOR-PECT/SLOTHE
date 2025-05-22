@@ -2,6 +2,7 @@
 # ======================================================
 set(LLVM_PLUGINS
     BasicTrace
+    CountCond
     Unreachable
     Mergeable
     Merge
@@ -14,6 +15,9 @@ set(LLVM_PLUGINS
 
 set(BasicTrace_SOURCES
   BasicTrace.cpp
+  )
+set(CountCond_SOURCES
+  CountCond.cpp
   )
 set(Unreachable_SOURCES
   Unreachable.cpp
