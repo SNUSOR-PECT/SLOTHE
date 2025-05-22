@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [ "$#" -ne 4 ]; then
+  echo "Usage: $0 <NAF> <precision> <min> <max>"
+  exit 1
+fi
+
+src=math/_$1.c
+echo "[*] The source file is located at $src"
+
+# 1. IR Translation -> ./temp/_$1.ll
+bash ./scripts/baseline.sh $1
+
+# 2. CF-Optimizer (1) Unrechable path elimination
+bash ./scripts/unreachable.sh $1
+
+# 3. CF-Optimizer (2) Equivalent path merging
+# TODO: run pathMerge.sh until all branches are analyzed
+bash ./scripts/pathMerge.sh $1 _$1_Unreachable _$1_Merged1 $2
+bash ./scripts/pathMerge.sh $1 _$1_Merged1 _$1_Merged2 $2
+
+# 4. Check the validity of optimized IRB compared to initial IRB
+bash ./scripts/checkValid.sh _$1_Merged2 $2 $3 $4
+
+# 5. (Optional) Apply additional optimization
+if [[ $1 == "tanh" ]]; then
+    bash ./scripts/optional.sh $1 _$1_Merged2 $1_optim
+    bash ./scripts/checkValid.sh $1_optim $2 $3 $4
+else
+    mv temp/_$1_Merged2 temp/$1_optim
+fi

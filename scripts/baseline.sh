@@ -1,15 +1,19 @@
 #!/bin/bash
 
-echo -e "\n[*] Draw a CFG of a target function (tanh)\n"
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 <NAF>"
+  exit 1
+fi
 
-/usr/local/bin/clang -O2 -c -emit-llvm ./math/_tanh.c -o ./temp/_tanh.bc
-/usr/local/bin/llvm-dis ./temp/_tanh.bc
-/usr/local/bin/opt -disable-output ./temp/_tanh.ll
-# rm -rf _tanh.bc _tanh.ll
+echo -e "\n[*] Draw a CFG of a target function ($1)"
 
-/usr/local/bin/opt -passes=dot-cfg -disable-output ./temp/_tanh.ll
-if dot -Tpng -o ./results/_tanh.png ./._tanh.dot; then
-    echo -e "\n[*] A new CFG is drawn at ./results/_tanh.png!"
+/usr/local/bin/clang -O2 -c -emit-llvm ./math/_$1.c -o ./temp/_$1.bc
+/usr/local/bin/llvm-dis ./temp/_$1.bc
+/usr/local/bin/opt -disable-output ./temp/_$1.ll
+
+/usr/local/bin/opt -passes=dot-cfg -disable-output ./temp/_$1.ll
+if dot -Tpng -o ./results/_$1.png ./._$1.dot; then
+    echo -e "[*] A new CFG is drawn at ./results/_$1.png!"
 else
-    echo -e "\n[*] Fail to draw a new CFG :("
+    echo -e "[*] Fail to draw a new CFG :("
 fi
