@@ -20,7 +20,12 @@ NAF[expm1]='expm1(x)'
 # 1. Op-Analyzer (2) build sub-func table and filter candidates of PAG
 subfuncTbl=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -S -disable-output temp/temp_$1.ll 2>&1))
 
-# TODO: f order by heuristic cost estimation
+# TODO: Op-Analyzer (3) check if $f holds uncomputable sub-func
+# if so, abort the FBA and return IRB_{old}
+# if [[ $cond ]]; then
+#   exit 1
+# fi
+
 for f in "${subfuncTbl[@]}"; do
   # in the definition of $f, if it includes some uncomputable sub-function, abort the FBA
   # -> $f should be approximated with PA
@@ -59,17 +64,20 @@ for f in "${subfuncTbl[@]}"; do
         break
     fi
   done
-
-  if [[ $found -eq 0 ]]; then
-    echo "PA is not found, pass $f to CF-optimizer"
-    bash ./scripts/cf_optimizer.sh $f $1_div -$fMax $fMax
-    subfuncTbl+=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -S -disable-output temp/$f_optim.ll 2>&1))
-
-    # Apply 4) New IRB structure of $f by linking $f and PA
-    /usr/local/bin/llvm-link temp/temp_$1.ll temp/$f_optim.ll -S -o temp/merged.ll
-    /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceFunc.so -passes=replace-func,dce -target-func=$f -S -o temp/temp_$1.ll temp/merged.ll
-  fi
 done
+
+# if [[ $found -eq 0 ]]; then
+#   # error cannot be satisfied, abort the FBA and return the previous IRB
+#   # [e_{new} > e_{prev} : signal <- "keep IRB_{old} and select next IRB"
+
+#   # echo "PA is not found, pass $f to CF-optimizer"
+#   # bash ./scripts/cf_optimizer.sh $f $1_div -$fMax $fMax
+#   # subfuncTbl+=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -S -disable-output temp/$f_optim.ll 2>&1))
+
+#   # # Apply 4) New IRB structure of $f by linking $f and PA
+#   # /usr/local/bin/llvm-link temp/temp_$1.ll temp/$f_optim.ll -S -o temp/merged.ll
+#   # /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceFunc.so -passes=replace-func,dce -target-func=$f -S -o temp/temp_$1.ll temp/merged.ll
+# fi
 
 # 5. find maximum value of the input of div
 # Output
@@ -79,10 +87,11 @@ done
 # isExistDiv=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so -passes=get-div-range,dce -S -o temp/temp_$1_div.ll temp/temp_$1.ll 2>&1 | head -n1)
 isExistDiv=$(
   /usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so \
-    -passes=get-div-range,dce -S \
-    -o temp/temp_"$1"_div.ll  temp/temp_"$1".ll 2>&1 |
-  awk '/^[0-9]+$/ {print; exit}'
+    -passes=get-div-range,dce -target-func=_"$1" -S \
+    -o temp/temp_"$1"_div.ll  temp/temp_"$1".ll 2>&1
 )
+
+echo "isExistDiv = $isExistDiv"
 
 if [[ $isExistDiv == "1" ]]; then
   /usr/local/bin/llc -filetype=obj temp/temp_$1_div.ll -o temp_$1_div.o
@@ -107,12 +116,14 @@ if [[ $isExistDiv == "1" ]]; then
     fRate2=$(echo "$tmp" | awk '{print $4}' | tr -d '%')
     if [[ "$fRate2" == "0" ]]; then
         echo "Minimum d = $d"
-        cp temp/$1_result.ll results/
+        # cp temp/$1_result.ll results/
+        cp temp/$1_result.ll ./$1_new.ll
         break
     fi
   done
 else
-  cp temp/temp_$1.ll results/$1_result.ll
+  # cp temp/temp_$1.ll results/$1_result.ll
+  cp temp/temp_$1.ll ./$1_new.ll
 fi
 
 rm -rf *.o checkMax

@@ -31,68 +31,71 @@ bool isDerivedFrom(Value *V, Value *target) {
     return false;
 }
 
+static cl::opt<std::string> TargetFunc(
+    "target-func",
+    cl::desc("Target function name"),
+    cl::value_desc("function name"),
+    cl::init("")
+);
+
 //------------------------------------------------------------------------------
 // Crucial functions
 //------------------------------------------------------------------------------
 
 PreservedAnalyses GetDivisorRange::run(llvm::Function &Func,
                                       llvm::FunctionAnalysisManager &)  {
-    bool Changed = false;
+  bool Changed = false;
+  bool flag = 0;
 
-    Module *M = Func.getParent();
-    Function *fFunc = M->getFunction("f");
-    if (!fFunc)
-        return PreservedAnalyses::all(); // Skip if `f` is not linked
-
-    // 2. detect division
-    bool flag = 0;
-    Value* fdiv_detected = nullptr;
-    for (auto &BB : Func) {
-      for (auto &I : BB) {
-        if (I.getOpcode() == Instruction::FDiv) {
-          Value* tmp = I.getOperand(1);
-          if (isDerivedFrom(&I, Func.getArg(0))) {
-            // errs() << *tmp << " is derived from the input %0\n";
-            fdiv_detected = tmp;
-            flag = 1;
-            break;
-          }
+  // detect division
+  Value* fdiv_detected = nullptr;
+  for (auto &BB : Func) {
+    for (auto &I : BB) {
+      if (I.getOpcode() == Instruction::FDiv) {
+        Value* tmp = I.getOperand(1);
+        if (isDerivedFrom(&I, Func.getArg(0))) {
+          // errs() << *tmp << " is derived from the input %0\n";
+          fdiv_detected = tmp;
+          flag = 1;
+          break;
         }
       }
     }
+  }
 
-    errs() << flag << "\n";
+  if (Func.getName() == TargetFunc)
+    errs() << flag << '\n';
 
-    // Safety check
-    if (!fdiv_detected) {
-      // errs() << "No fdiv found\n";
-      return PreservedAnalyses::all();
+  // Safety check
+  if (!fdiv_detected) {
+    // errs() << "No fdiv found\n";
+    return PreservedAnalyses::all();
+  }
+
+  for (auto &BB : Func) {
+    Instruction *term = BB.getTerminator();
+    if (ReturnInst *retInst = dyn_cast<ReturnInst>(term)) {
+        // Ensure fdiv_detected is valid and dominates here
+        IRBuilder<> builder(retInst);
+        
+        // If it's not an instruction, it's already safe to use
+        if (isa<Instruction>(fdiv_detected)) {
+            Instruction *fdInst = cast<Instruction>(fdiv_detected);
+            if (fdInst->getParent() != &BB ||
+                !fdInst->comesBefore(retInst)) {
+                // insert a move/copy if needed
+                // errs() << "Error: fdiv_detected doesn't dominate return\n";
+                return PreservedAnalyses::none();
+            }
+        }
+        
+        builder.CreateRet(fdiv_detected);
+        retInst->eraseFromParent();
+        break;
     }
+  }
 
-    for (auto &BB : Func) {
-      Instruction *term = BB.getTerminator();
-      if (ReturnInst *retInst = dyn_cast<ReturnInst>(term)) {
-          // Ensure fdiv_detected is valid and dominates here
-          IRBuilder<> builder(retInst);
-          
-          // If it's not an instruction, it's already safe to use
-          if (isa<Instruction>(fdiv_detected)) {
-              Instruction *fdInst = cast<Instruction>(fdiv_detected);
-              if (fdInst->getParent() != &BB ||
-                  !fdInst->comesBefore(retInst)) {
-                  // insert a move/copy if needed
-                  // errs() << "Error: fdiv_detected doesn't dominate return\n";
-                  return PreservedAnalyses::none();
-              }
-          }
-          
-          builder.CreateRet(fdiv_detected);
-          retInst->eraseFromParent();
-          break;
-      }
-    }
-
-    return (Changed ? PreservedAnalyses::none() : PreservedAnalyses::all());
+  return (Changed ? PreservedAnalyses::none() : PreservedAnalyses::all());
 }
 
 //-----------------------------------------------------------------------------
