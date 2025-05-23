@@ -9,6 +9,7 @@ set(LLVM_PLUGINS
     OpAnalyzer
     GetFuncRange
     ReplaceFunc
+    ReplaceDivtoMul
     ReplaceDiv
     GetDivisorRange
     )
@@ -36,6 +37,9 @@ set(GetFuncRange_SOURCES
   )
 set(ReplaceFunc_SOURCES
   ReplaceFunc.cpp
+  )
+set(ReplaceDivtoMul_SOURCES
+  ReplaceDivtoMul.cpp
   )
 set(ReplaceDiv_SOURCES
   ReplaceDiv.cpp

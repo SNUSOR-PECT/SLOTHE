@@ -1,4 +1,4 @@
-#include "ReplaceFunc.h"
+#include "ReplaceDivtoMul.h"
 
 #include "llvm/IR/PassManager.h"
 #include "llvm/Passes/PassBuilder.h"
@@ -6,24 +6,19 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
 #include "llvm/Support/CommandLine.h"
 
 using namespace llvm;
 
-#define DEBUG_TYPE "replace-func"
+#define DEBUG_TYPE "replace-div-mul"
 
 //------------------------------------------------------------------------------
 // Util functions
 //------------------------------------------------------------------------------
-static cl::opt<std::string> TargetFunc(
-    "target-func",
-    cl::desc("Target function name"),
-    cl::value_desc("function name"),
-    cl::init("")
-);
-
 bool isDerivedFrom(Value *V, Value *target) {
     if (V == target) return true;
 
@@ -41,49 +36,56 @@ bool isDerivedFrom(Value *V, Value *target) {
 // Crucial functions
 //------------------------------------------------------------------------------
 
-PreservedAnalyses ReplaceFunc::run(llvm::Function &Func,
+PreservedAnalyses ReplaceDivtoMul::run(llvm::Function &Func,
                                       llvm::FunctionAnalysisManager &)  {
-    bool Changed = false;
+    std::vector<Instruction*> ToErase;
 
-    Module *M = Func.getParent();
-    Function *fFunc = M->getFunction("f");
-    if (!fFunc)
-        return PreservedAnalyses::all(); // Skip if `f` is not linked
-
-    // detect function call
     for (auto &BB : Func) {
         for (auto &I : BB) {
-          if (auto *call = dyn_cast<CallInst>(&I)) {
-              Function *calledFunc = call->getCalledFunction();
-              if (calledFunc && calledFunc->getName() == TargetFunc) {
-                  IRBuilder<> Builder(call);
-                  Value *arg = call->getArgOperand(0);
+            if (I.getOpcode() == Instruction::FDiv) {
+                errs() << "FDiv detected\n";
+                Value *dividend = I.getOperand(0);
+                Value *divisor = I.getOperand(1);
 
-                  auto *newCall = Builder.CreateCall(fFunc, {arg});
-                  call->replaceAllUsesWith(newCall);
-                  call->eraseFromParent();
-                  Changed = true;
-                  // errs() << TargetFunc << " is replaced\n";
-                  break; // iterator is invalidated, safe break
-              }
-          }
+                if (auto* c = llvm::dyn_cast<llvm::ConstantFP>(divisor)) {
+                    errs() << "divisor is a constant\n";
+                    double div_value = c->getValueAPF().convertToDouble();
+                    double recip = 1.0 / div_value;
+
+                    // Create reciprocal constant
+                    llvm::Value* recipConst = llvm::ConstantFP::get(divisor->getType(), recip);
+
+                    // Insert multiplication before the division instruction
+                    llvm::IRBuilder<> builder(&I);
+                    llvm::Value* newMul = builder.CreateFMul(dividend, recipConst);
+
+                    // Replace uses and mark old instruction for erasure
+                    I.replaceAllUsesWith(newMul);
+                    ToErase.push_back(&I);
+                }
+            }
         }
     }
 
-    return (Changed ? PreservedAnalyses::none() : PreservedAnalyses::all());
+    // Remove all collected instructions (safe!)
+    for (auto* I : ToErase) {
+        I->eraseFromParent();
+    }
+
+    return PreservedAnalyses::none();
 }
 
 //-----------------------------------------------------------------------------
 // New PM Registration
 //-----------------------------------------------------------------------------
-llvm::PassPluginLibraryInfo getReplaceFuncPluginInfo() {
-  return {LLVM_PLUGIN_API_VERSION, "replace-func", LLVM_VERSION_STRING,
+llvm::PassPluginLibraryInfo getReplaceDivtoMulPluginInfo() {
+  return {LLVM_PLUGIN_API_VERSION, "replace-div-mul", LLVM_VERSION_STRING,
           [](PassBuilder &PB) {
             PB.registerPipelineParsingCallback(
                 [](StringRef Name, FunctionPassManager &FPM,
                    ArrayRef<PassBuilder::PipelineElement>) {
-                  if (Name == "replace-func") {
-                    FPM.addPass(ReplaceFunc(llvm::errs()));
+                  if (Name == "replace-div-mul") {
+                    FPM.addPass(ReplaceDivtoMul(llvm::errs()));
                     return true;
                   }
                   return false;
@@ -93,5 +95,5 @@ llvm::PassPluginLibraryInfo getReplaceFuncPluginInfo() {
 
 extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
 llvmGetPassPluginInfo() {
-  return getReplaceFuncPluginInfo();
+  return getReplaceDivtoMulPluginInfo();
 }

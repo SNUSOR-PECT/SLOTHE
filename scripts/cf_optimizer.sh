@@ -32,8 +32,9 @@ if [[ "$cnt" != "0" ]]; then
       bash ./scripts/optional.sh $1 _$1_Merged2 $1_optim
       bash ./scripts/checkValid.sh $1_optim $2 $3 $4
   else
-      mv temp/_$1_Merged2 temp/$1_optim
+      mv temp/_$1_Merged2.ll temp/$1_optim.ll
   fi
 else
   echo "$1 does not have condition clause, pass CF-optimizer"
+  mv temp/_$1.ll temp/$1_optim.ll
 fi

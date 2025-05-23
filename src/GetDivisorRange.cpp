@@ -45,19 +45,23 @@ PreservedAnalyses GetDivisorRange::run(llvm::Function &Func,
         return PreservedAnalyses::all(); // Skip if `f` is not linked
 
     // 2. detect division
+    bool flag = 0;
     Value* fdiv_detected = nullptr;
     for (auto &BB : Func) {
         for (auto &I : BB) {
           if (I.getOpcode() == Instruction::FDiv) {
             Value* tmp = I.getOperand(1);
             if (isDerivedFrom(&I, Func.getArg(0))) {
-              // errs() << *tmp << " is derived from the input %0\n";
+              errs() << *tmp << " is derived from the input %0\n";
               fdiv_detected = tmp;
+              flag = 1;
               break;
             }
           }
         }
     }
+
+    errs() << flag << "\n";
 
     // Safety check
     if (!fdiv_detected) {
