@@ -25,12 +25,12 @@ if [[ "$cnt" != "0" ]]; then
   bash ./scripts/pathMerge.sh $1 _$1_Merged1 _$1_Merged2 $2
 
   # 4. Check the validity of optimized IRB compared to initial IRB
-  bash ./scripts/checkValid.sh _$1_Merged2 $2 $3 $4
+  bash ./scripts/checkValid.sh $1 _$1_Merged2 $2 $3 $4
 
   # 5. (Optional) Apply additional optimization
   if [[ $1 == "tanh" ]]; then
       bash ./scripts/optional.sh $1 _$1_Merged2 $1_optim
-      bash ./scripts/checkValid.sh $1_optim $2 $3 $4
+      bash ./scripts/checkValid.sh $1 $1_optim $2 $3 $4
   else
       mv temp/_$1_Merged2.ll temp/$1_optim.ll
   fi

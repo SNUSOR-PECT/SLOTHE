@@ -48,17 +48,17 @@ PreservedAnalyses GetDivisorRange::run(llvm::Function &Func,
     bool flag = 0;
     Value* fdiv_detected = nullptr;
     for (auto &BB : Func) {
-        for (auto &I : BB) {
-          if (I.getOpcode() == Instruction::FDiv) {
-            Value* tmp = I.getOperand(1);
-            if (isDerivedFrom(&I, Func.getArg(0))) {
-              errs() << *tmp << " is derived from the input %0\n";
-              fdiv_detected = tmp;
-              flag = 1;
-              break;
-            }
+      for (auto &I : BB) {
+        if (I.getOpcode() == Instruction::FDiv) {
+          Value* tmp = I.getOperand(1);
+          if (isDerivedFrom(&I, Func.getArg(0))) {
+            // errs() << *tmp << " is derived from the input %0\n";
+            fdiv_detected = tmp;
+            flag = 1;
+            break;
           }
         }
+      }
     }
 
     errs() << flag << "\n";
@@ -81,7 +81,7 @@ PreservedAnalyses GetDivisorRange::run(llvm::Function &Func,
               if (fdInst->getParent() != &BB ||
                   !fdInst->comesBefore(retInst)) {
                   // insert a move/copy if needed
-                  errs() << "Error: fdiv_detected doesn't dominate return\n";
+                  // errs() << "Error: fdiv_detected doesn't dominate return\n";
                   return PreservedAnalyses::none();
               }
           }

@@ -10,6 +10,7 @@ declare -A NAF
 NAF[tanh]='tanh(x)'
 NAF[gelu]='x/2*(1+erf(x/sqrt(2)))'
 NAF[erf]='erf(x)'
+NAF[expm1]='expm1(x)'
 
 # <source> = initial FBA candidate IRB
 
@@ -22,14 +23,14 @@ subfuncTbl=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so 
 # TODO: f order by heuristic cost estimation
 for f in "${subfuncTbl[@]}"; do
   # 1. get input range of the sub-func $f
-  /usr/local/bin/opt -load-pass-plugin ./build/lib/libGetFuncRange.so -passes=get-func-range,dce -target-func=$f -S -o temp/temp_$f.ll $2
+  /usr/local/bin/opt -load-pass-plugin ./build/lib/libGetFuncRange.so -passes=get-func-range,dce -target-func=$f -S -o temp/temp_$f.ll temp/temp_$1.ll
   /usr/local/bin/llc -filetype=obj temp/temp_$f.ll -o temp_$f.o
   /usr/local/bin/clang++ ./scripts/checkMax.cpp temp_$f.o -o checkMax -lm
-  fMax=$(./checkMax $4 $5)
+  fMax=$(./checkMax _$1 $4 $5)
   echo "function $f, ($4, $5) fMax : $fMax"
 
   found=0
-  for deg in $(seq 11 1 27); do
+  for deg in $(seq 14 1 27); do
     # 2. run PAG with desired input range of subfunction
     # TODO: modify lolremez output (function) name
     lolremez --double -r "-$fMax:$fMax" "${NAF[$f]}" -d $deg > temp/temp_$f.c
@@ -44,7 +45,7 @@ for f in "${subfuncTbl[@]}"; do
     /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceFunc.so -passes=replace-func,dce -target-func=$f -S -o temp/replaced.ll temp/merged.ll
 
     # 5. check the validity of current PA for sub-func (UDC Tracker)
-    tmp=$(bash ./scripts/checkValid.sh replaced $3 $4 $5)
+    tmp=$(bash ./scripts/checkValid.sh $1 replaced $3 $4 $5)
     fRate=$(echo "$tmp" | awk '{print $4}' | tr -d '%')
     if [[ "$fRate" == "0" ]]; then
         echo "Minimum approximation degree of $f = $deg"
@@ -70,14 +71,13 @@ done
 # Output
 # - NAF is replaced with approximated function
 # - The function returns the input of div
-/usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so -passes=get-div-range,dce -S -o temp/temp_$1_div.ll temp/temp_$1.ll
 
-isExistDiv=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so -passes=get-div-range,dce -S -o temp/temp_$1_div.ll temp/temp_$1.ll 2>&1)
+isExistDiv=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so -passes=get-div-range,dce -S -o temp/temp_$1_div.ll temp/temp_$1.ll 2>&1 | head -n1)
 
 if [[ $isExistDiv == "1" ]]; then
   /usr/local/bin/llc -filetype=obj temp/temp_$1_div.ll -o temp_$1_div.o
   /usr/local/bin/clang++ ./scripts/checkMax.cpp temp_$1_div.o -o checkMax -lm
-  divMax=$(./checkMax $4 $5)
+  divMax=$(./checkMax _$1 $4 $5)
   echo "divMax : $divMax"
 
   # 6. compile approximated divide (inverse)
@@ -93,7 +93,7 @@ if [[ $isExistDiv == "1" ]]; then
     /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceDiv.so -passes=replace-div,dce -div-max=$divMax -iter-d=$d -S -o temp/$1_result.ll temp/merged_div.ll
 
     # 5. check the validity of current approximated polynomial for sub-func
-    tmp=$(bash ./scripts/checkValid.sh $1_result $3 $4 $5)
+    tmp=$(bash ./scripts/checkValid.sh $1 $1_result $3 $4 $5)
     fRate2=$(echo "$tmp" | awk '{print $4}' | tr -d '%')
     if [[ "$fRate2" == "0" ]]; then
         echo "Minimum d = $d"
@@ -102,7 +102,7 @@ if [[ $isExistDiv == "1" ]]; then
     fi
   done
 else
-  cp temp/temp_$1_div.ll results/$1_result.ll
+  cp temp/temp_$1.ll results/$1_result.ll
 fi
 
 rm -rf *.o checkMax

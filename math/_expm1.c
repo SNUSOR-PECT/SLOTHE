@@ -1,7 +1,50 @@
 // ref: https://github.com/lattera/glibc/blob/master/sysdeps/ieee754/dbl-64/s_expm1.c
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
+
+typedef union
+{
+	double value;
+	struct
+	{
+		unsigned int lsw;
+		unsigned int msw;
+	} parts;
+	unsigned long long word;
+} ieee_double_shape_type;
+
+#ifndef GET_HIGH_WORD
+# define GET_HIGH_WORD(i,d)					\
+do {								\
+  ieee_double_shape_type gh_u;					\
+  gh_u.value = (d);						\
+  (i) = gh_u.parts.msw;						\
+} while (0)
+#endif
+
+/* Get the less significant 32 bit int from a double.  */
+
+#ifndef GET_LOW_WORD
+# define GET_LOW_WORD(i,d)					\
+do {								\
+  ieee_double_shape_type gl_u;					\
+  gl_u.value = (d);						\
+  (i) = gl_u.parts.lsw;						\
+} while (0)
+#endif
+
+/* Set the more significant 32 bits of a double from an int.  */
+#ifndef SET_HIGH_WORD
+#define SET_HIGH_WORD(d,v)					\
+do {								\
+  ieee_double_shape_type sh_u;					\
+  sh_u.value = (d);						\
+  sh_u.parts.msw = (v);						\
+  (d) = sh_u.value;						\
+} while (0)
+#endif
 
 #define one Q[0]
 static const double

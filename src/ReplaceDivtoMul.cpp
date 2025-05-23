@@ -43,12 +43,12 @@ PreservedAnalyses ReplaceDivtoMul::run(llvm::Function &Func,
     for (auto &BB : Func) {
         for (auto &I : BB) {
             if (I.getOpcode() == Instruction::FDiv) {
-                errs() << "FDiv detected\n";
+                // errs() << "FDiv detected\n";
                 Value *dividend = I.getOperand(0);
                 Value *divisor = I.getOperand(1);
 
                 if (auto* c = llvm::dyn_cast<llvm::ConstantFP>(divisor)) {
-                    errs() << "divisor is a constant\n";
+                    // errs() << "divisor is a constant\n";
                     double div_value = c->getValueAPF().convertToDouble();
                     double recip = 1.0 / div_value;
 

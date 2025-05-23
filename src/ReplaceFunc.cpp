@@ -63,7 +63,7 @@ PreservedAnalyses ReplaceFunc::run(llvm::Function &Func,
                   call->replaceAllUsesWith(newCall);
                   call->eraseFromParent();
                   Changed = true;
-                  // errs() << TargetFunc << " is replaced\n";
+                //   errs() << TargetFunc << " is replaced\n";
                   break; // iterator is invalidated, safe break
               }
           }
