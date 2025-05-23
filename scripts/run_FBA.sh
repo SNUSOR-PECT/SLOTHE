@@ -22,6 +22,10 @@ subfuncTbl=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so 
 
 # TODO: f order by heuristic cost estimation
 for f in "${subfuncTbl[@]}"; do
+  # in the definition of $f, if it includes some uncomputable sub-function, abort the FBA
+  # -> $f should be approximated with PA
+  # TODO check if $f holds uncomputable sub-func
+
   # 1. get input range of the sub-func $f
   /usr/local/bin/opt -load-pass-plugin ./build/lib/libGetFuncRange.so -passes=get-func-range,dce -target-func=$f -S -o temp/temp_$f.ll temp/temp_$1.ll
   /usr/local/bin/llc -filetype=obj temp/temp_$f.ll -o temp_$f.o
@@ -72,7 +76,13 @@ done
 # - NAF is replaced with approximated function
 # - The function returns the input of div
 
-isExistDiv=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so -passes=get-div-range,dce -S -o temp/temp_$1_div.ll temp/temp_$1.ll 2>&1 | head -n1)
+# isExistDiv=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so -passes=get-div-range,dce -S -o temp/temp_$1_div.ll temp/temp_$1.ll 2>&1 | head -n1)
+isExistDiv=$(
+  /usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so \
+    -passes=get-div-range,dce -S \
+    -o temp/temp_"$1"_div.ll  temp/temp_"$1".ll 2>&1 |
+  awk '/^[0-9]+$/ {print; exit}'
+)
 
 if [[ $isExistDiv == "1" ]]; then
   /usr/local/bin/llc -filetype=obj temp/temp_$1_div.ll -o temp_$1_div.o
