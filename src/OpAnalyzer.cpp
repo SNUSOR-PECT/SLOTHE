@@ -13,6 +13,7 @@
 #include <tuple>
 #include <vector>
 #include <stack>
+#include <set>
 
 using namespace llvm;
 
@@ -21,7 +22,17 @@ using namespace llvm;
 //------------------------------------------------------------------------------
 // Util functions
 //------------------------------------------------------------------------------
-
+using opcode_t = unsigned;
+void initInst(std::set<opcode_t>& inst) {
+  inst = {
+    Instruction::Add,  Instruction::FAdd,
+    Instruction::Sub,  Instruction::FSub,
+    Instruction::Mul,  Instruction::FMul,
+    Instruction::UDiv, Instruction::SDiv, Instruction::FDiv,
+    // Instruction::URem, Instruction::SRem, Instruction::FRem
+    Instruction::Ret
+  };
+}
 
 //------------------------------------------------------------------------------
 // Crucial functions
@@ -29,18 +40,37 @@ using namespace llvm;
 
 PreservedAnalyses OpAnalyzer::run(llvm::Function &Func,
                                       llvm::FunctionAnalysisManager &) {
+
+  std::set<opcode_t> inst;
+  initInst(inst);
   
-    for (auto &BB : Func) {
-        for (auto &I : BB) {
-            if (auto *call = llvm::dyn_cast<llvm::CallBase>(&I)) {
-                const llvm::Function *calledFunc = call->getCalledFunction();
-                if (calledFunc) {
-                    llvm::StringRef funcName = calledFunc->getName();
-                    llvm::errs() << funcName << " ";
-                }
-            }
+  for (auto &BB : Func) {
+    for (auto &I : BB) {
+      if (auto *call = llvm::dyn_cast<llvm::CallBase>(&I)) {
+        const llvm::Function *calledFunc = call->getCalledFunction();
+        if (calledFunc) {
+          continue; // computable
         }
+      }
+      // if I is incomputable, return -1
+      if (inst.find(I.getOpcode()) == inst.end()) {
+        llvm::errs() << -1 << "\n";
+        return llvm::PreservedAnalyses::all();
+      }
     }
+  }
+
+  for (auto &BB : Func) {
+    for (auto &I : BB) {
+      if (auto *call = llvm::dyn_cast<llvm::CallBase>(&I)) {
+        const llvm::Function *calledFunc = call->getCalledFunction();
+        if (calledFunc) {
+            llvm::StringRef funcName = calledFunc->getName();
+            llvm::errs() << funcName << " ";
+        }
+      }
+    }
+  }
 
   return llvm::PreservedAnalyses::all();
 }
