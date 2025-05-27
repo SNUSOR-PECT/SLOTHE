@@ -22,7 +22,7 @@ approxQueue=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so
 for f in "${approxQueue[@]}"; do
   if [[ $f == "-1" ]]; then
     echo "[*] sub-func has a incomputable operation"
-    echo "abort the FBA and return IRB_{old}"
+    echo "[*] abort the FBA and return IRB_{old}"
     echo "00" > temp/signal.txt
     exit 1
   fi
@@ -139,7 +139,7 @@ if [[ $cond -eq "1" ]]; then
     fi
 else
   # (signal) signal <- "IRB_{old}=IRB{tmp} and pass sub-func"
-  echo "[*] pass sub-func to op-analyzer and push IRB"
+  echo "[*] pass sub-func to op-analyzer and push IRBs"
   echo "02" > temp/signal.txt
 
   for subF in "${approxQueue[@]}"; do

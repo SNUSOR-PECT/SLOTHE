@@ -87,10 +87,10 @@ while :; do
     break
   elif [[ $sig == "01" ]]; then
     # keep IRB_{old} and continue the loop
-    echo "keep IRB_{old} and continue the loop"
+    echo "[*] keep IRB_{old} and continue the loop"
   elif [[ $sig == "02" ]]; then
     # update IRB_{old} = IRB_{tmp}
-    echo "IRB_{old} = IRB_{tmp}"
+    echo "[*] IRB_{old} = IRB_{tmp} and continue the loop"
     cp ./temp/$1_tmp.ll ./temp/$1_old.ll
   fi
 

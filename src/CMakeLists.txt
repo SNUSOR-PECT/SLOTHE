@@ -4,6 +4,7 @@ set(LLVM_PLUGINS
     BasicTrace
     CountCond
     CostEstimation
+    TimeEstimation
     Unreachable
     Mergeable
     Merge
@@ -23,6 +24,9 @@ set(CountCond_SOURCES
   )
 set(CostEstimation_SOURCES
   CostEstimation.cpp
+  )
+set(TimeEstimation_SOURCES
+  TimeEstimation.cpp
   )
 set(Unreachable_SOURCES
   Unreachable.cpp
