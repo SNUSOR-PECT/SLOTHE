@@ -19,11 +19,14 @@ NAF[expm1]='expm1(x)'
 approxQueue=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -S -disable-output temp/$1_tmp.ll 2>&1))
 
 # Signal [00] return IRB_{old}
-if [[ $approxQueue == "-1" ]]; then
-  echo "[*] abort the FBA and return IRB_{old}"
-  echo "00" > temp/signal.txt
-  exit 1
-fi
+for f in "${approxQueue[@]}"; do
+  if [[ $f == "-1" ]]; then
+    echo "[*] sub-func has a incomputable operation"
+    echo "abort the FBA and return IRB_{old}"
+    echo "00" > temp/signal.txt
+    exit 1
+  fi
+done
 
 for f in "${approxQueue[@]}"; do
 

@@ -61,7 +61,8 @@ while :; do
 
   # Heuristic cost estimation using CostEstimation pass
   for f in "${files[@]}"; do
-    cost=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libCostEstimation.so -passes=estimate-cost -S -disable-output $f 2>&1)
+    costs=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libCostEstimation.so -passes=estimate-cost -S -disable-output $f 2>&1)
+    cost=$(echo "$costs" | awk -F': ' '{sum+=$2} END {print sum}')
     if [[ -z $cost_target || $(awk -v a="$cost" -v b="$cost_target" \
                                   'BEGIN{exit (a<b)?0:1}') == 0 ]]; then
       cost_target=$cost
@@ -74,9 +75,6 @@ while :; do
   # run FBA on target (IRB_{tmp} = $IRB_target)
   cp $IRB_target ./temp/$1_tmp.ll
   bash ./scripts/run_FBA.sh $1 ./temp/$1_tmp.ll $2 $3 $4 $5 $6
-
-  # break
-  # exit 1
 
   # Signal [00] return IRB_{old}
   # Signal [01] keep IRB_{old} and select next IRB
@@ -94,10 +92,10 @@ while :; do
     # update IRB_{old} = IRB_{tmp}
     echo "IRB_{old} = IRB_{tmp}"
     cp ./temp/$1_tmp.ll ./temp/$1_old.ll
-
   fi
 
   rm -f -- "$f"
+
 done
 
 # print SLOTHE result

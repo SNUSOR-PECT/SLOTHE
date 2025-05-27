@@ -67,7 +67,7 @@ PreservedAnalyses CostEstimation::run(llvm::Function &Func,
 
     int cost = cntCond*100 + cntSubfunc*30 + cntCDiv*100;
 
-    errs() << cost << "\n";
+    errs() << Func.getName() << ": " <<  cost << "\n";
 
 
   return llvm::PreservedAnalyses::all();
