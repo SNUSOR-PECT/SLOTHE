@@ -17,6 +17,13 @@ using namespace llvm;
 //------------------------------------------------------------------------------
 // Util functions
 //------------------------------------------------------------------------------
+static cl::opt<std::string> SourceFunc(
+    "source-func",
+    cl::desc("Source function name"),
+    cl::value_desc("function name"),
+    cl::init("")
+);
+
 static cl::opt<std::string> TargetFunc(
     "target-func",
     cl::desc("Target function name"),
@@ -46,16 +53,17 @@ PreservedAnalyses ReplaceFunc::run(llvm::Function &Func,
     bool Changed = false;
 
     Module *M = Func.getParent();
-    Function *fFunc = M->getFunction("f");
-    if (!fFunc)
-        return PreservedAnalyses::all(); // Skip if `f` is not linked
+    Function *fFunc = M->getFunction(TargetFunc); // f
+    if (!fFunc) {
+      return PreservedAnalyses::all();
+    } 
 
     // detect function call
     for (auto &BB : Func) {
         for (auto &I : BB) {
           if (auto *call = dyn_cast<CallInst>(&I)) {
               Function *calledFunc = call->getCalledFunction();
-              if (calledFunc && calledFunc->getName() == TargetFunc) {
+              if (calledFunc && calledFunc->getName() == SourceFunc) {
                   IRBuilder<> Builder(call);
                   Value *arg = call->getArgOperand(0);
 
@@ -63,12 +71,21 @@ PreservedAnalyses ReplaceFunc::run(llvm::Function &Func,
                   call->replaceAllUsesWith(newCall);
                   call->eraseFromParent();
                   Changed = true;
-                //   errs() << TargetFunc << " is replaced\n";
+
+                  // fFunc->setName(SourceFunc);
+                  errs() << SourceFunc << " is replaced into " << TargetFunc << "\n";
                   break; // iterator is invalidated, safe break
               }
           }
         }
     }
+
+    if (Function *srcFunc = M->getFunction(SourceFunc)) {
+      if (srcFunc->use_empty()) {
+          srcFunc->eraseFromParent();
+          errs() << "Removed unused function: " << SourceFunc << "\n";
+      }
+}
 
     return (Changed ? PreservedAnalyses::none() : PreservedAnalyses::all());
 }

@@ -1,10 +1,11 @@
 #!/bin/bash
 
-if [ "$#" -ne 5 ]; then
-  echo "Usage: $0 <NAF> <precision> <time> <min> <max>"
+if [ "$#" -ne 6 ]; then
+  echo "Usage: $0 <NAF> <precision> <time> <min> <max> <mode>"
   exit 1
 fi
 
+# We assume that the time budget is at least on par with that available in PA
 if [[ $3 < 40 ]]; then
   echo "[*] The time budget is too small (> 40)"
   exit 1
@@ -14,7 +15,7 @@ fi
 mkdir -p temp
 mkdir -p fba_pool
 
-# 0. initial UDC checking for NAF itself when replaced with PA
+# 0. initial UDC checking if NAF can be replaced with PA
 declare -A NAF
 NAF[tanh]='tanh(x)'
 NAF[gelu]='x/2*(1+erf(x/sqrt(2)))'
@@ -22,7 +23,7 @@ NAF[gelu]='x/2*(1+erf(x/sqrt(2)))'
 precLim="1e-$2"
 found=0
 
-for deg in $(seq 14 1 14); do
+for deg in $(seq 14 1 15); do
   # 2. run PAG with desired input range of subfunction
   lolremez --double -r "$4:$5" "${NAF[$1]}" -d $deg > temp/temp_$1.c
   maxerr=$(awk -F':' '/Estimated max error/{
@@ -38,31 +39,16 @@ for deg in $(seq 14 1 14); do
   fi
 done
 
-# if time budget remains
-if [[ $found == "1" ]]; then
-  echo "[*] run SLOTHE"
-  # 1. run CF-optimizer
-  bash ./scripts/cf_optimizer.sh $1 $2 $4 $5
+# Let temp/temp_"$1"/.c -> IRB_{old}
+/usr/local/bin/clang -O2 -c -emit-llvm temp/temp_"$1".c -o temp/$1_old.bc
+/usr/local/bin/llvm-dis temp/$1_old.bc
 
-  # initial IRB is "temp/$1_optim.ll"
-  cost=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libCostEstimation.so -passes=estimate-cost -S -disable-output temp/$1_optim.ll 2>&1)
+# 1. run CF-optimizer on $1 -> output name is $1_optim.ll
+echo "[*] run SLOTHE"
+bash ./scripts/cf_optimizer.sh $1 $2 $4 $5
 
-  # if time budget remains for definition of $1,
-  if [[ $cost < $3 ]]; then
-    # push IRB to FBA candidates pool
-    cp temp/$1_optim.ll fba_pool/$1_cand1.ll
-
-  # if not, abort and return previous PA result
-  else
-    echo "[*] Estimated cost of $1 is $cost, which exceeds $3, abort the SLOTHE."
-    echo "[*] SLOTHE results in degree $deg PA for $1 at temp/temp_"$1".c."
-    exit 1
-  fi
-else
-  echo "[*] SLOTHE results in degree $deg PA for $1  at temp/temp_"$1".c."
-  echo "[*] Estimated max error is $maxerr"
-  exit 1
-fi
+# initial IRB is "temp/$1_optim.ll", push to fba_pool
+cp temp/$1_optim.ll fba_pool/$1_cand1.ll
 
 # Run FBA until fba_pool is empty
 shopt -s nullglob
@@ -77,18 +63,20 @@ while :; do
   for f in "${files[@]}"; do
     cost=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libCostEstimation.so -passes=estimate-cost -S -disable-output $f 2>&1)
     if [[ -z $cost_target || $(awk -v a="$cost" -v b="$cost_target" \
-                                  'BEGIN{exit (a<b)?0:1}') == 0 ]]
-    then
-        cost_target=$cost
-        IRB_target=$f
+                                  'BEGIN{exit (a<b)?0:1}') == 0 ]]; then
+      cost_target=$cost
+      IRB_target=$f
     fi
   done
 
   echo "[*] Lowest cost this round: $IRB_target (cost=$cost_target)"
-  cp $IRB_target ./temp/$1_old.ll
 
-  # run FBA on ./$1_old.ll
-  bash ./scripts/run_FBA.sh $1 $IRB_target $2 $3 $4 $5 "minErr"
+  # run FBA on target (IRB_{tmp} = $IRB_target)
+  cp $IRB_target ./temp/$1_tmp.ll
+  bash ./scripts/run_FBA.sh $1 ./temp/$1_tmp.ll $2 $3 $4 $5 $6
+
+  # break
+  # exit 1
 
   # Signal [00] return IRB_{old}
   # Signal [01] keep IRB_{old} and select next IRB
@@ -96,21 +84,18 @@ while :; do
   # Signal [03] terminate FBA and return IRB_{old}
   # Signal [04] terminate FBA and return IRB_{tmp}
 
-  read -r sig < temp/signal.txt # ← word ends at first whitespace
+  read -r sig < temp/signal.txt # ← signal
   if [[ $sig == "00" || $sig == "03" || $sig == "04" ]]; then
     break
   elif [[ $sig == "01" ]]; then
     # keep IRB_{old} and continue the loop
     echo "keep IRB_{old} and continue the loop"
   elif [[ $sig == "02" ]]; then
-    # update IRB_{old} = IRB_{tmp} and run below steps
-    echo "IRB_{old} = IRB_{tmp} and run below steps"
-  fi
+    # update IRB_{old} = IRB_{tmp}
+    echo "IRB_{old} = IRB_{tmp}"
+    cp ./temp/$1_tmp.ll ./temp/$1_old.ll
 
-  # if $signal == "IRB_{old}=IRB{tmp} and pass sub-func"
-  # (1) bash ./scripts/cf_optimizer.sh $subfunc $2 $4 $5
-  # (2) merge optimized $subfunc into $1
-  # (3) add merged IRB into fba_pool
+  fi
 
   rm -f -- "$f"
 done
