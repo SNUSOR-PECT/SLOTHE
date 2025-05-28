@@ -58,6 +58,8 @@ for f in "${approxQueue[@]}"; do
     if [[ "$fRate" == "0" ]]; then
       echo "Minimum approximation degree of $f = $deg"
       found=1
+      # errNew=$(bash ./scripts/checkErr.sh $1 replaced $5 $6)
+      # echo "errNew = $errNew"
       # update IRB state
       cp temp/replaced.ll temp/$1_tmp.ll
       break
@@ -119,12 +121,27 @@ if [[ $isExistDiv == "1" ]]; then
 fi
 
 if [[ $7 == "minErr" ]]; then
-  condTime=$(bash ./scripts/checkTime.sh $1 $1_tmp $4 $5 $6)
+  condTime=$(bash ./scripts/checkTime.sh $1 $1_tmp $4)
   cond=$condTime
 else # M == "minTime"
   cond=$found
 fi
 
+errNew=$(bash ./scripts/checkErr.sh $1 $1_tmp $5 $6)
+read -r errPrev < temp/errPrev.txt
+
+_errNew=$(printf "%.10f" "$errNew")
+_errPrev=$(printf "%.10f" "$errPrev")
+
+echo "errNew=$_errNew, errPrev=$_errPrev"
+
+if (( $(echo "$_errNew > $_errPrev" | bc -l) )); then
+  echo "01" > temp/signal.txt
+  exit 1
+fi
+
+# update err_{prev}
+echo "$errNew" > temp/errPrev.txt
 echo "M=$7, cond = $cond"
 
 if [[ $cond -eq "1" ]]; then
@@ -137,7 +154,7 @@ if [[ $cond -eq "1" ]]; then
       echo "[*] terminate FBA and return IRB_{tmp}"
       echo "04" > temp/signal.txt
     fi
-else
+else 
   # (signal) signal <- "IRB_{old}=IRB{tmp} and pass sub-func"
   echo "[*] pass sub-func to op-analyzer and push IRBs"
   echo "02" > temp/signal.txt

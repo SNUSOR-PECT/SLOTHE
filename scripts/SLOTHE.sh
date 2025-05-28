@@ -21,7 +21,6 @@ NAF[tanh]='tanh(x)'
 NAF[gelu]='x/2*(1+erf(x/sqrt(2)))'
 
 precLim="1e-$2"
-found=0
 
 for deg in $(seq 14 1 15); do
   # 2. run PAG with desired input range of subfunction
@@ -29,15 +28,17 @@ for deg in $(seq 14 1 15); do
   maxerr=$(awk -F':' '/Estimated max error/{
                gsub(/[[:space:]]*/,"",$2); print $2}' temp/temp_"$1".c)
 
-  dec_err=$(printf "%.20f" "$maxerr")
-  dec_lim=$(printf "%.20f" "$precLim")
+  dec_err=$(printf "%.10f" "$maxerr")
+  dec_lim=$(printf "%.10f" "$precLim")
 
   if (( $(echo "$dec_err < $dec_lim" | bc -l) )); then
     echo "$maxerr < $precLim  →  target met"
-    found=1
+    echo "$maxerr" > temp/errPrev.txt
     break
   fi
 done
+
+echo "$maxerr" > temp/errPrev.txt
 
 # Let temp/temp_"$1"/.c -> IRB_{old}
 /usr/local/bin/clang -O2 -c -emit-llvm temp/temp_"$1".c -o temp/$1_old.bc
@@ -95,8 +96,11 @@ while :; do
   fi
 
   rm -f -- "$f"
-
 done
+
+if ! compgen -G "path/to/dir/*" > /dev/null; then
+  echo "[*] No FBA candidates found."
+fi
 
 # print SLOTHE result
 echo "[*] Result is saved at results/$1_result.ll ."

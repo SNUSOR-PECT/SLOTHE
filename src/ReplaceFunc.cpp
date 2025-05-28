@@ -73,7 +73,7 @@ PreservedAnalyses ReplaceFunc::run(llvm::Function &Func,
                   Changed = true;
 
                   // fFunc->setName(SourceFunc);
-                  errs() << SourceFunc << " is replaced into " << TargetFunc << "\n";
+                  // errs() << SourceFunc << " is replaced into " << TargetFunc << "\n";
                   break; // iterator is invalidated, safe break
               }
           }
@@ -83,7 +83,7 @@ PreservedAnalyses ReplaceFunc::run(llvm::Function &Func,
     if (Function *srcFunc = M->getFunction(SourceFunc)) {
       if (srcFunc->use_empty()) {
           srcFunc->eraseFromParent();
-          errs() << "Removed unused function: " << SourceFunc << "\n";
+          // errs() << "Removed unused function: " << SourceFunc << "\n";
       }
 }
 

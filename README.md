@@ -13,6 +13,7 @@ bash ./scripts/build.sh
 # bash ./scripts/SLOTHE.sh <NAF> <precision> <time> <min> <max> 
 bash ./scripts/SLOTHE.sh gelu 2 40 -4 4 "minErr"
 bash ./scripts/SLOTHE.sh tanh 2 40 -4 4 "minErr"
+bash ./scripts/SLOTHE.sh tanh 3 900 -4 4 "minErr"
 bash ./scripts/SLOTHE.sh tanh 4 40 -4 4 "minTime"
 ```
 

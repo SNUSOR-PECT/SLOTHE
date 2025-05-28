@@ -261,7 +261,8 @@ PreservedAnalyses TimeEstimation::run(llvm::Module &M, llvm::ModuleAnalysisManag
         // errs() << i << " | " << opLvl[i].first << "\t:\t" << (opLvl[i].second)%bLvl << " (" << opLvl[i].second << ")\n";
     }
 
-    errs() << "Total estimated time = " << totalTime/1000 << " ms\n";
+    // errs() << "Total estimated time = " << totalTime/1000 << " ms\n";
+    errs() << totalTime/1000 << "\n";
 
     return PreservedAnalyses::all();
 }
