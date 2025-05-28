@@ -21,6 +21,7 @@
 #include <vector>
 #include <tuple>
 #include <cstdlib>
+#include <fstream>
 #include <unordered_set>
 
 //------------------------------------------------------------------------------

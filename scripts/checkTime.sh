@@ -5,4 +5,4 @@ if [ "$#" -ne 5 ]; then
   exit 1
 fi
 
-/usr/local/bin/opt -load-pass-plugin ./build/lib/libTimeEstimation.so -passes=estimate-time -target-func=_$1 -S -disable-output temp/$2
+/usr/local/bin/opt -load-pass-plugin ./build/lib/libTimeEstimation.so -passes=estimate-time -target-func=_$1 -param-path=scripts/time.csv -S -disable-output temp/$2.ll

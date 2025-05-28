@@ -1,4 +1,5 @@
 #include "TimeEstimation.h"
+#include "readOpTime.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
@@ -10,6 +11,8 @@
 using namespace llvm;
 
 #define DEBUG_TYPE "estimate-time"
+// available level without bootstrapping
+#define bLvl 9
 
 //------------------------------------------------------------------------------
 // Util functions
@@ -70,12 +73,13 @@ static cl::opt<std::string> TargetFunc(
     cl::init("")
 );
 
-static llvm::cl::opt<std::string> paramFile(
+static llvm::cl::opt<std::string> paramPath(
     "param-path",
     llvm::cl::desc("Specify FHE parameter file"),
     llvm::cl::value_desc("filename"),
-    llvm::cl::init("default.txt")
+    llvm::cl::init("default.csv")
 );
+
 //------------------------------------------------------------------------------
 // Crucial functions
 //------------------------------------------------------------------------------
@@ -89,6 +93,15 @@ void calInv(int lvl, int d, std::vector<std::pair<std::string, int>>& opLvl) {
         // a = a*(1+b)
         opLvl.push_back({"PAdd", curL}); 
         opLvl.push_back({"CMult", curL++});
+        if (curL%bLvl == 0) {
+            opLvl.push_back({"Btp", -1}); // for b
+            opLvl.push_back({"Btp", -1}); // for a
+        }
+        if (curL%bLvl == bLvl-1) {
+            opLvl.push_back({"Btp", -1}); // for b
+            opLvl.push_back({"Btp", -1}); // for a
+            curL++;
+        }
     }
 }
 
@@ -177,7 +190,13 @@ void TimeEstimation::traceFunction(llvm::Function *Func, std::set<std::string> &
                         int reqLvl = ceil(log2(deg))+1;
                         lvl4Funcs += reqLvl;
 
-                        // (4) push operations
+                        // (4) check remaining lvl
+                        if ((bLvl-opL%bLvl) < reqLvl) {
+                            opLvl.push_back({"Btp", -1});
+                            opL += (bLvl-opL%bLvl);
+                        }
+
+                        // (5) push operations
                         calPoly(opL, deg, opLvl);
                     }
                 }
@@ -210,16 +229,39 @@ PreservedAnalyses TimeEstimation::run(llvm::Module &M, llvm::ModuleAnalysisManag
     std::set<std::string> visited;
     std::vector<std::pair<std::string, int>> opLvl;
 
+    // load time file
+    Perf p;
+    readOpTime(paramPath, p);
+
     if (Function *root = M.getFunction(TargetFunc)) {
         llvm::Value* input = root->getArg(0);
         traceFunction(root, visited, input, opLvl);
     }
 
-    int totalLvl = opLvl[opLvl.size()-1].second;
+    // int totalLvl = opLvl[opLvl.size()-1].second;
+    // errs() << "Total required (minimum) depth = " << totalLvl << "\n";
 
-    // for (std::size_t i=0; i<opLvl.size(); i++) {
-    //     errs() << "op = " << opLvl[i].first << " : " << opLvl[i].second << "\n";
-    // }
+    int totalTime = 0;
+    for (std::size_t i=0; i<opLvl.size(); i++) {
+        int idx = 0;
+
+        if (opLvl[i].first == "Btp") {
+            totalTime += p.btp;
+            continue;
+        }
+
+        if (opLvl[i].first == "PAdd") idx = 0;
+        if (opLvl[i].first == "CAdd") idx = 1;
+        if (opLvl[i].first == "PMult") idx = 2;
+        if (opLvl[i].first == "CMult") idx = 3;
+
+        int lvl = (opLvl[i].second)%bLvl;
+        totalTime += p.opTime[lvl][idx];
+
+        // errs() << i << " | " << opLvl[i].first << "\t:\t" << (opLvl[i].second)%bLvl << " (" << opLvl[i].second << ")\n";
+    }
+
+    errs() << "Total estimated time = " << totalTime/1000 << " ms\n";
 
     return PreservedAnalyses::all();
 }
