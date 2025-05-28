@@ -31,7 +31,7 @@ struct TimeEstimation : public llvm::PassInfoMixin<TimeEstimation> {
     public:
         explicit TimeEstimation(llvm::raw_ostream &OutS) : OS(OutS) {}
 
-        void traceFunction(llvm::Function *F, std::set<std::string> &visited, int* requiredLvl, llvm::Value* input);
+        void traceFunction(llvm::Function *F, std::set<std::string> &visited, llvm::Value* input, std::vector<std::pair<std::string, int>>& opLvl);
         
         llvm::PreservedAnalyses run(llvm::Module &M, llvm::ModuleAnalysisManager &);
 
