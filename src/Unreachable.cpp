@@ -153,8 +153,6 @@ PreservedAnalyses Unreachable::run(llvm::Function &Func,
         bool isSpecials = isSpecialBranch(&BB, brInst); // check the branch's semantic
           if (isSpecials) {
               // remove branch by setting the same successor on both True/False branch
-              // To remove other successors, apply simplify-cfg pass would be good choice :) 
-              // errs() << "[*] BB    - isSpecials = True detected!\n";
               brInst->setSuccessor(0, brInst->getSuccessor(1));
               specialFound = true;
           }
@@ -162,7 +160,6 @@ PreservedAnalyses Unreachable::run(llvm::Function &Func,
       if (!subnormalFound) {
         bool isSubNormal = isSubNormalBranch(&BB, brInst); // check the branch's semantic
         if (isSubNormal) {
-          // errs() << "[*] BB    - isSubNormal = True detected!\n";
           brInst->setSuccessor(0, brInst->getSuccessor(1));
           subnormalFound = true;
         }
@@ -170,7 +167,6 @@ PreservedAnalyses Unreachable::run(llvm::Function &Func,
       if (!exactZeroFound) {
         bool exactZero = isExactZero(&BB, brInst); // check the branch's semantic
         if (exactZero) {
-          // errs() << "[*] BB    - isExactZero = True detected!\n";
           brInst->setSuccessor(0, brInst->getSuccessor(1));
           exactZeroFound = true;
         }

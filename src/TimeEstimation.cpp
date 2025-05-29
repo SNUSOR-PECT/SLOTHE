@@ -7,6 +7,8 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/Intrinsics.h"
 
 using namespace llvm;
 
@@ -152,6 +154,20 @@ void getDeg(int* deg, llvm::Function *Func) {
     *deg = cnt;
 }
 
+// We assume that PA is composed of only llvm.fmuladd.f64 fcalls
+bool isPA(Function* Func) {
+    for (auto &BB : *Func) {
+        for (auto &I : BB) {
+            if (auto *CI = llvm::dyn_cast<llvm::CallInst>(&I)) {
+                if (CI->getIntrinsicID() == llvm::Intrinsic::fmuladd) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 void TimeEstimation::traceFunction(llvm::Function *Func, std::set<std::string> &visited, llvm::Value* input, std::vector<std::pair<std::string, int>>& opLvl) {
     if (!Func || visited.count(Func->getName().str())) return;
     visited.insert(Func->getName().str());
@@ -233,8 +249,41 @@ PreservedAnalyses TimeEstimation::run(llvm::Module &M, llvm::ModuleAnalysisManag
     Perf p;
     readOpTime(paramPath, p);
 
+    // if the first function is a PA (NAF -> PA)
+    if (M.size() == 2) {
+        Function* entry = nullptr;
+        for (Function &F : M) {
+            if (!F.isDeclaration()) {
+                entry = &F;
+                break;
+            }
+        }
+
+        if (entry && !isPA(entry)) return PreservedAnalyses::all();;
+
+        // (1) get deg
+        int deg = 0;
+        getDeg(&deg, entry);
+
+        // (2) get starting level
+        int opL = 0;
+
+        // (3) get required level for evaluating inverse
+        int reqLvl = ceil(log2(deg))+1;
+
+        // (4) check remaining lvl
+        if ((bLvl-opL%bLvl) < reqLvl) {
+            opLvl.push_back({"Btp", -1});
+            opL += (bLvl-opL%bLvl);
+        }
+
+        // (5) push operations
+        calPoly(opL, deg, opLvl);
+    }
+
     if (Function *root = M.getFunction(TargetFunc)) {
         llvm::Value* input = root->getArg(0);
+        // for normal cases
         traceFunction(root, visited, input, opLvl);
     }
 

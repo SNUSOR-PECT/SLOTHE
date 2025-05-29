@@ -14,7 +14,7 @@ cnt=$(echo "$out" | grep -x '[0-9]\+')
 echo "cnt = $cnt"
 
 if [[ "$cnt" != "0" ]]; then
-  echo "$1 has condition clauses, run CF-optimizer"
+  echo "[*] $1 has condition clauses, run CF-optimizer"
 
   # 2. CF-Optimizer (1) Unrechable path elimination
   bash ./scripts/unreachable.sh $1
@@ -35,6 +35,6 @@ if [[ "$cnt" != "0" ]]; then
       mv temp/_$1_Merged2.ll temp/$1_optim.ll
   fi
 else
-  echo "$1 does not have condition clause, pass CF-optimizer"
+  echo "[*] $1 does not have condition clause, pass CF-optimizer"
   mv temp/_$1.ll temp/$1_optim.ll
 fi

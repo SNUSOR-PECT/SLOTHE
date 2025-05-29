@@ -127,6 +127,7 @@ else # M == "minTime"
   cond=$found
 fi
 
+# check err
 errNew=$(bash ./scripts/checkErr.sh $1 $1_tmp $5 $6)
 read -r errPrev < temp/errPrev.txt
 
