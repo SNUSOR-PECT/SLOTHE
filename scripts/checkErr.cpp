@@ -28,6 +28,7 @@ extern "C" double _swish(double) __attribute__((weak));
 extern "C" double _mish(double) __attribute__((weak));
 extern "C" double _sigmoid(double) __attribute__((weak));
 extern "C" double _softplus(double) __attribute__((weak));
+extern "C" double f(double) __attribute__((weak));
 
 typedef double (*unary_fp)(double);
 struct Entry { const char *name; double (*func)(double); };
@@ -42,6 +43,7 @@ static struct Entry table[] = {
     {"_expm1", expm1},
     {"_exp", exp},
     {"_erf", erf},
+    {"f", f},
     {NULL, NULL}
 };
 
@@ -61,7 +63,7 @@ static const std::unordered_map<std::string, Func> tblOrigin = {
 double callOrigin(const std::string& s, double x) {
     auto it = tblOrigin.find(s);
     if (it == tblOrigin.end())
-        throw std::runtime_error("Unknown function: " + s);
+        throw std::runtime_error("[Origin] Unknown function: " + s);
     return it->second(x);
 }
 
@@ -86,8 +88,10 @@ int main(int argc, char* argv[]) {
         if (e->func && strcmp(fname, e->name) == 0) { f = e->func; break; }
 
     if (!f) {
-        std::cout << "Unknown function: " << fname << "\n";
-        return 1;
+        // PA    
+        const char *_fname = "f";
+        for (Entry *e = table; e->name; ++e)
+            if (e->func && strcmp(_fname, e->name) == 0) { f = e->func; break; }
     }
 
     double _min=std::stoi(argv[2]), _max=std::stoi(argv[3]);

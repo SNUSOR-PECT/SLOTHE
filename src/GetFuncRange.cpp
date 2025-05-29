@@ -48,7 +48,7 @@ PreservedAnalyses GetFuncRange::run(llvm::Function &Func,
 
     // Safety check
     if (!arg) {
-      errs() << "No " << TargetFunc << " found\n";
+      // errs() << "No " << TargetFunc << " found\n";
       return PreservedAnalyses::all();
     }
 

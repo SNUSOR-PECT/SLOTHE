@@ -6,7 +6,7 @@ if [ "$#" -ne 6 ]; then
 fi
 
 # We assume that the time budget is at least on par with that available in PA
-if [[ $3 < 40 ]]; then
+if [[ $3 < 10 ]]; then
   echo "[*] The time budget is too small (> 40)"
   exit 1
 fi
@@ -22,27 +22,46 @@ NAF[gelu]='x/2*(1+erf(x/sqrt(2)))'
 
 precLim="1e-$2"
 
-for deg in $(seq 14 1 15); do
+for (( deg=10; deg<=27; )); do
   # 2. run PAG with desired input range of subfunction
   lolremez --double -r "$4:$5" "${NAF[$1]}" -d $deg > temp/temp_$1.c
+
   maxerr=$(awk -F':' '/Estimated max error/{
                gsub(/[[:space:]]*/,"",$2); print $2}' temp/temp_"$1".c)
 
   dec_err=$(printf "%.10f" "$maxerr")
   dec_lim=$(printf "%.10f" "$precLim")
 
-  if (( $(echo "$dec_err < $dec_lim" | bc -l) )); then
-    echo "$maxerr < $precLim  →  target met"
-    echo "$maxerr" > temp/errPrev.txt
-    break
+  if [[ $6 == "minErr" ]]; then
+    # will choose the highest deg
+    /usr/local/bin/clang -O2 -c -emit-llvm temp/temp_"$1".c -o temp/$1_tmp.bc
+    /usr/local/bin/llvm-dis temp/$1_tmp.bc
+    condTime=$(bash ./scripts/checkTime.sh $1 $1_tmp $3)
+    if [[ $condTime == "1" ]]; then
+      (( deg-- )) # save prior IRB
+      break
+    else
+      cp temp/$1_tmp.ll temp/$1_old.ll
+    fi
+  else
+    # will choose the lowest deg
+    if (( $(echo "$dec_err < $dec_lim" | bc -l) )); then
+      /usr/local/bin/clang -O2 -c -emit-llvm temp/temp_"$1".c -o temp/$1_old.bc
+      /usr/local/bin/llvm-dis temp/$1_old.bc
+      # echo "$maxerr < $precLim  →  target met"
+      break
+    fi
   fi
+
+  (( deg++ ))
 done
 
-echo "$maxerr" > temp/errPrev.txt
+if [[ $deg == 28 ]]; then
+  (( deg-- ))
+fi
 
-# Let temp/temp_"$1"/.c -> IRB_{old}
-/usr/local/bin/clang -O2 -c -emit-llvm temp/temp_"$1".c -o temp/$1_old.bc
-/usr/local/bin/llvm-dis temp/$1_old.bc
+echo "deg = $deg, maxerr = $maxerr"
+echo "$maxerr" > temp/errPrev.txt
 
 # 1. run CF-optimizer on $1 -> output name is $1_optim.ll
 echo "[*] run SLOTHE"
@@ -109,3 +128,5 @@ if [[ $sig == "00" || $sig == "01" || $sig == "02" || $sig == "03" ]]; then
 elif [[ $sig == "04" ]]; then
   cp ./temp/$1_tmp.ll results/$1_result.ll
 fi
+
+bash ./scripts/printResults.sh $1 results/$1_result.ll $4 $5
