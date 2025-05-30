@@ -1,5 +1,6 @@
 #include "Unreachable.h"
 
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
@@ -7,6 +8,7 @@
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/CommandLine.h"
 
 #include <tuple>
 #include <vector>
@@ -19,166 +21,120 @@ using namespace llvm;
 //------------------------------------------------------------------------------
 // Util functions
 //------------------------------------------------------------------------------
-uint32_t Unreachable::getConstantVal(Value* val) {
-  ConstantInt *CI = dyn_cast<ConstantInt>(val);
-  return CI->getSExtValue();
-}
+static cl::opt<double> _min(
+    "val-min",
+    cl::desc("minimum value"),
+    cl::value_desc("minimum"),
+    cl::init(0.0)
+);
+static cl::opt<double> _max(
+    "val-max",
+    cl::desc("maximum value"),
+    cl::value_desc("maximum"),
+    cl::init(0.0)
+);
 
-llvm::Value* Unreachable::getOperandFromCondition(Value* Cond, size_t pos) {
-  ICmpInst *ICmp = dyn_cast<ICmpInst>(Cond);
-  return ICmp->getOperand(pos);
-}
+//------------------------------------------------------------------------------
+// Crucial functions
+//------------------------------------------------------------------------------
+using opcode_t = unsigned;
+bool isHighWord(Value* val) {
 
-bool Unreachable::isConditionHighwordofInput(Value* Cond) {
-  std::stack<llvm::Instruction*> insts;
+  std::vector<opcode_t> seq_rev = {Instruction::Trunc, Instruction::LShr, Instruction::BitCast}; // reversed order of inst sequence
 
-  Value* op = getOperandFromCondition(Cond, 0);
-  insts.push(dyn_cast<Instruction>(Cond)); // push branch condition
-
-  // trace the instructions consist of target operands
-  // this may not work -- need to be modified precisely
+  int idx = 0;
+  bool isValid = true;
   while(1) {
-      if (Instruction *I = dyn_cast<Instruction>(op)) {
-          insts.push(I);
-          op = I->getOperand(0);
+      if (Instruction *I = dyn_cast<Instruction>(val)) {
+          if (I->getOpcode()!=seq_rev[idx++]) isValid=false;
+          val = I->getOperand(0);
           continue;
       }
       break;
   }
 
-  // detect {bitcast - lshr - trunc} sequence
-  std::vector<bool> isValidSequence(3, false);
-  while(!insts.empty()) {
-      Instruction* I = insts.top();
-      insts.pop(); // remove top instruction
-
-      if (isValidSequence[0] == false && I->getOpcode()==Instruction::BitCast) {
-          isValidSequence[0] = true;
-      }
-      if (isValidSequence[1] == false && I->getOpcode()==Instruction::LShr) {
-          isValidSequence[1] = true;
-      }
-      if (isValidSequence[2] == false && I->getOpcode()==Instruction::Trunc) {
-          isValidSequence[2] = true;
-      }
-  }
-
-  return isValidSequence[0] & isValidSequence[1] & isValidSequence[2];
+  return isValid;
 }
 
-//------------------------------------------------------------------------------
-// Crucial functions
-//------------------------------------------------------------------------------
+bool isHighAbsX(Value* val) {
+  bool res = true;
 
-bool Unreachable::isSpecialBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
-  Value* Cond = brInst->getCondition();
-
-  // First, check if the intermediate is specials(INF/NaN)
-  uint32_t opI = getConstantVal(getOperandFromCondition(Cond, 1));
-  uint32_t opT = 0x7ff00000 - 1; // since the condition holds 'equal'
-  if (!(opI == opT))
-    return false;
-
-  // Then check if the other operand is high word of the input 
-  bool isCondHighWord = isConditionHighwordofInput(Cond);
-
-  return isCondHighWord;
-}
-
-bool Unreachable::isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
-  Value* Cond = brInst->getCondition();
-
-  // First, check if the intermediate is subNormal
-  uint32_t opI = getConstantVal(getOperandFromCondition(Cond, 1));
-  uint32_t opT1 = 0x3c800000; // subnormal value in ieee-754 representation. 2**-55
-  uint32_t opT2 = 0x3c900000; // subnormal value in ieee-754 representation. 2**-54
-
-  if (!((opI == opT1) || (opI == opT2)))
-    return false;
-
-  // Then check if the other operand is high word of the input 
-  bool isCondHighWord = isConditionHighwordofInput(Cond);
-
-  return isCondHighWord;
-}
-
-bool Unreachable::isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst) {
-  // the first op : C <- "or" A B
-  // the second op : eq C 0
-  // then this block means that if x==+-0 -> remove
-  Value* Cond = brInst->getCondition();
-  bool res = false;
-
-  uint32_t opI = getConstantVal(getOperandFromCondition(Cond, 1));
-  // if the predecessor of terminator's operator is or
-  auto it = brInst->getIterator();
-  if (it != BB->begin()) {
-    // First, check if the operator is equal and the intermediate is 0
-    --it;
-    llvm::Instruction *predInst = &*it;
-    if (auto *cmp = dyn_cast<ICmpInst>(predInst)) {
-      if ((cmp->getPredicate() == ICmpInst::ICMP_EQ) && (opI == 0)) {
-        res = true;
-      }
-    }
-
-    // Second, check if the operator is bit-or
-    if (res) {
-      --it;
-      predInst = &*it;
-      if (auto *binOp = dyn_cast<BinaryOperator>(predInst)) {
-        if (binOp->getOpcode() != llvm::Instruction::Or) {
-          res = false;
-        }
-      }
+  if (auto *binOp = dyn_cast<BinaryOperator>(val)) {
+    // (1) check operator
+    if (binOp->getOpcode() != llvm::Instruction::And) res = false;
+    // (2) check operands
+    if (!isHighWord(binOp->getOperand(0))) res = false;
+    if (ConstantInt *CI = dyn_cast<ConstantInt>(binOp->getOperand(1))) {
+      if (CI->getSExtValue() != 2147483647) res = false;
     }
   }
 
   return res;
 }
 
-PreservedAnalyses Unreachable::run(llvm::Function &Func,
-                                      llvm::FunctionAnalysisManager &) {
-  bool specialFound = false;
-  bool subnormalFound = false;
-  bool exactZeroFound = false;
-  
-  for (auto &BB : Func) {
-    auto term = BB.getTerminator(); // check BB which contains conditional branch
-    // errs() << *term << "\n";
-    BranchInst *brInst = dyn_cast<BranchInst>(term);
+int isIEEESpecialValBranch(llvm::BasicBlock* BB, llvm::ICmpInst *I) {
+  using Pred = llvm::ICmpInst::Predicate;
 
-    if ( brInst && (brInst->isConditional())) {
-      if (!specialFound) {
-        bool isSpecials = isSpecialBranch(&BB, brInst); // check the branch's semantic
-          if (isSpecials) {
-              // remove branch by setting the same successor on both True/False branch
-              brInst->setSuccessor(0, brInst->getSuccessor(1));
-              specialFound = true;
-          }
+  Value *RHS = I->getOperand(1);
+
+  if (auto *CI = llvm::dyn_cast<llvm::ConstantInt>(RHS)) {
+    uint32_t uVal = CI->getZExtValue();
+    int32_t  sVal = CI->getSExtValue();
+
+    if (isHighAbsX(I->getOperand(0))) {
+      // case 1) sub-normal values
+      if (I->getPredicate() == Pred::ICMP_ULT) {
+        if (uVal <= 1043333120) return 1; // -55
+        // if (uVal == 1015021568) return 1; // -55
+        // if (uVal == 1043333120) return 1; // -28
       }
-      if (!subnormalFound) {
-        bool isSubNormal = isSubNormalBranch(&BB, brInst); // check the branch's semantic
-        if (isSubNormal) {
-          brInst->setSuccessor(0, brInst->getSuccessor(1));
-          subnormalFound = true;
-        }
+
+      // case 2) INF or NaN
+      if (I->getPredicate() == Pred::ICMP_UGT) {
+        if (uVal == 2146435071) return 2;
       }
-      if (!exactZeroFound) {
-        bool exactZero = isExactZero(&BB, brInst); // check the branch's semantic
-        if (exactZero) {
-          brInst->setSuccessor(0, brInst->getSuccessor(1));
-          exactZeroFound = true;
-        }
+    } else {
+      // case 3) +-0 or exact 0
+      if ((isHighAbsX(llvm::dyn_cast<llvm::Instruction>(I->getOperand(0))->getOperand(1))) && I->getPredicate() == Pred::ICMP_EQ) {
+        if (sVal == 0) return 3;
       }
     }
-
-    // We currently assume that only one BB holds INF/NaN or subNormal branch among BBs.
-    // Thus, since each case occurs only once throughout BBs, we break the loop
-    if (specialFound & subnormalFound & exactZeroFound) break;
   }
 
-  return llvm::PreservedAnalyses::all();
+  return 0;
+}
+
+PreservedAnalyses Unreachable::run(llvm::Function &Func,
+                                      llvm::FunctionAnalysisManager &) {
+  bool modified = false;
+
+  for (auto &BB : Func) {
+    if (auto *brInst = dyn_cast<BranchInst>(BB.getTerminator())) {
+      if (!brInst->isConditional()) continue;
+
+      ICmpInst *ICmp = dyn_cast<ICmpInst>(brInst->getCondition());
+
+      // 1) check if the branch indicates IEEE Special values
+      int tag = isIEEESpecialValBranch(&BB, ICmp);
+      switch (tag) {
+        case 1:
+        case 2:
+        case 3:
+          brInst->setSuccessor(0, brInst->getSuccessor(1)); // always false
+          modified = true;
+          errs() << "remove tag = " << tag << "\n";
+        default:
+          break;
+      }
+
+      // 2) check if the branch indicates unreachable path
+      // if (isHighAbsX(I->getOperand(0))) {
+
+      // }
+    }
+  }
+
+  return modified ? PreservedAnalyses::none() : PreservedAnalyses::all();
 }
 
 //-----------------------------------------------------------------------------
