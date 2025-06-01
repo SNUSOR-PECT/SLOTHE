@@ -12,18 +12,18 @@ echo -e "[*] Apply Mergeable and SimplifyCFG pass on $1"
 
 # Generate T0.txt and F1.txt
 /usr/local/bin/llc -filetype=obj ./temp/$2.ll -o $2.o
-/usr/local/bin/clang++ ./scripts/checkMerge.cpp $2.o -o checkMerge -lm
+/usr/local/bin/clang++ ./utils/checkMerge.cpp $2.o -o checkMerge -lm
 ./checkMerge T 0 $2
 ./checkMerge F 1 $2
 
 # Generate T1.txt and F0.txt
 /usr/local/bin/llc -filetype=obj ./temp/$2_swapped.ll -o $2_swapped.o
-/usr/local/bin/clang++ ./scripts/checkMerge.cpp $2_swapped.o -o checkMerge -lm
+/usr/local/bin/clang++ ./utils/checkMerge.cpp $2_swapped.o -o checkMerge -lm
 ./checkMerge T 1 $2
 ./checkMerge F 0 $2
 
 # Check mergeability
-/usr/local/bin/clang++ ./scripts/isMergeable.cpp -o isMergeable -lm
+/usr/local/bin/clang++ ./utils/isMergeable.cpp -o isMergeable -lm
 isMergeable=$(./isMergeable $4)
 # echo "isMergeable? : $isMergeable"
 

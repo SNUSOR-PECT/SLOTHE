@@ -13,7 +13,7 @@ echo "[*] The source file is located at $src"
 # 1. IR Translation -> ./temp/_$1.ll
 out=$(bash ./scripts/baseline.sh $1 2>&1)
 cnt=$(echo "$out" | grep -x '[0-9]\+')
-echo "cnt = $cnt"
+# echo "cnt = $cnt"
 
 if [[ "$cnt" != "0" ]]; then
   echo "[*] $1 has condition clauses, run CF-optimizer"
@@ -38,5 +38,5 @@ if [[ "$cnt" != "0" ]]; then
   fi
 else
   echo "[*] $1 does not have condition clause, pass CF-optimizer"
-  # mv temp/_$1.ll temp/$1_optim.ll
+  mv temp/_$1.ll temp/$1_optim.ll
 fi

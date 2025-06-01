@@ -11,11 +11,11 @@ t=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libTimeEstimation.so -passe
 # err
 # Generate T0.txt and F1.txt
 /usr/local/bin/llc -filetype=obj $2 -o tmp.o
-/usr/local/bin/clang++ scripts/checkErr.cpp tmp.o -o checkErr -lm
+/usr/local/bin/clang++ utils/checkErr.cpp tmp.o -o checkErr -lm
 e=$(./checkErr _$1 $3 $4)
 
-echo "============================================="
+echo "======================================================"
 echo "Expected time = $t, expected err = $e"
-echo "============================================="
+echo "======================================================"
 
 rm -rf checkErr tmp.o

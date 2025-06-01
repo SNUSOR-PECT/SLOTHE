@@ -18,10 +18,10 @@ bash ./scripts/build.sh
 # bash ./scripts/SLOTHE.sh <NAF> <precision> <time> <min> <max> 
 # if "minErr", <precision> is not used
 # if "minTime", <time> is not used
-bash ./scripts/SLOTHE.sh gelu 2 40 -8 8 "minErr"
-bash ./scripts/SLOTHE.sh tanh 3 40 -4 4 "minErr"
-bash ./scripts/SLOTHE.sh tanh 4 900 -4 4 "minErr"
-bash ./scripts/SLOTHE.sh tanh 3 40 -4 4 "minTime"
+bash ./scripts/SLOTHE.sh gelu 2 40 -8 8 "minErr" 50
+bash ./scripts/SLOTHE.sh tanh 3 40 -4 4 "minErr" 50
+bash ./scripts/SLOTHE.sh tanh 4 900 -4 4 "minErr" 50
+bash ./scripts/SLOTHE.sh tanh 3 40 -4 4 "minTime" 50
 ```
 
 ### Clean all generated temporal files

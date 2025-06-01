@@ -7,7 +7,7 @@ fi
 
 # Generate T0.txt and F1.txt
 /usr/local/bin/llc -filetype=obj ./temp/$2.ll -o $2.o
-/usr/local/bin/clang++ scripts/optim.cpp $2.o -o optim -lm
+/usr/local/bin/clang++ utils/optim.cpp $2.o -o optim -lm
 ./optim $2 $3
 
 # Re-compile

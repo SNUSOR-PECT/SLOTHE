@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ "$#" -ne 7 ]; then
-  echo "Usage: $0 <NAF> <source> <precision> <time> <min> <max> <Mode>"
+if [ "$#" -ne 8 ]; then
+  echo "Usage: $0 <NAF> <source> <precision> <time> <min> <max> <Mode> <HE-precision>"
   exit 1
 fi
 
@@ -27,7 +27,7 @@ isExistDiv=$(
 
 if [[ $isExistDiv == "1" ]]; then
   /usr/local/bin/llc -filetype=obj temp/$1_tmp_div.ll -o $1_tmp_div.o
-  /usr/local/bin/clang++ ./scripts/checkMax.cpp $1_tmp_div.o -o checkMax -lm
+  /usr/local/bin/clang++ ./utils/checkMax.cpp $1_tmp_div.o -o checkMax -lm
   divMax=$(./checkMax _$1 $5 $6)
   # echo "divMax : $divMax"
 
@@ -75,9 +75,8 @@ if [[ $isExistDiv == "1" ]]; then
     exit 1
   fi
 
-  # update err_{prev}
-  echo "$errNew" > temp/errPrev.txt
-  # echo "M=$7, cond = $cond"
+  # update err_{prev} -> not update
+  # echo "$errNew" > temp/errPrev.txt
 fi
 
 # Signal [00] return IRB_{old}
@@ -96,16 +95,24 @@ for f in "${approxQueue[@]}"; do
   # 1. get input range of the sub-func $f
   /usr/local/bin/opt -load-pass-plugin ./build/lib/libGetFuncRange.so -passes=get-func-range,dce -target-func=$f -S -o temp/temp_$f.ll temp/$1_tmp.ll
   /usr/local/bin/llc -filetype=obj temp/temp_$f.ll -o temp_$f.o
-  /usr/local/bin/clang++ ./scripts/checkMax.cpp temp_$f.o -o checkMax -lm
+  /usr/local/bin/clang++ ./utils/checkMax.cpp temp_$f.o -o checkMax -lm
   fMax=$(./checkMax _$1 $5 $6)
   # echo "function $f, ($5, $6) fMax : $fMax"
 
   found=0
   read -r errPrevTop < temp/errPrev.txt
   _errPrevTop=$(printf "%.10f" "$errPrevTop")
-  for (( deg=10; deg<=27; )); do
+  for (( _deg=10; _deg<=27; )); do
     # 2. run PAG with desired input range of subfunction
-    lolremez --double -r "-$fMax:$fMax" "${NAF[$f]}" -d $deg > temp/temp_$f.c
+    lolremez --double -r "-$fMax:$fMax" "${NAF[$f]}" -d $_deg > temp/temp_$f.c
+
+    # check if the coeff can be encoded
+  pval=$(./checkPrecVal temp/temp_$f.c $8)
+  # echo "deg=$_deg, coeff can be represented? $pval"
+  if [[ $pval == "0" ]]; then
+    (( _deg++ ))
+    continue
+  fi
 
     # 3. compile PA
     /usr/local/bin/clang -O2 -c -emit-llvm temp/temp_$f.c -o temp/temp_$f.bc
@@ -125,12 +132,14 @@ for f in "${approxQueue[@]}"; do
       _errPrev=$(printf "%.10f" "$errPrev")
 
       # new IRB should have better error than previous IRB
+      # echo "  $_errPrevTop >= $_errNew"
       if (( $(echo "$_errPrevTop >= $_errNew" | bc -l) )); then
 
         # check if time is not met
         if [[ $condTime == "1" ]]; then
           errNew=$errPrev
-          (( deg-- )) # keep prior IRB (temp/$1_tmp.ll)
+          deg=$_deg-1
+          # (( _deg-- )) # keep prior IRB (temp/$1_tmp.ll)
           break
         fi
 
@@ -138,15 +147,18 @@ for f in "${approxQueue[@]}"; do
           # update
           errPrev=$errNew
           found=1
+          deg=$_deg
+          cp temp/temp_"$f".c temp/temp_"$f"_old.c
           cp temp/replaced.ll temp/$1_replaced_tmp.ll
-          (( deg++ ))
+          (( _deg++ ))
           continue
         fi
 
         # check if err is not better than the previous replaced, save the prior IRB
         if [[ $(echo "$_errPrev <= $_errNew" | bc -l) ]]; then
           errNew=$errPrev
-          (( deg-- )) # keep prior IRB (temp/$1_replaced_tmp.ll)
+          deg=$_deg-1
+          # (( _deg-- )) # keep prior IRB (temp/$1_replaced_tmp.ll)
           break
         fi
       fi
@@ -158,24 +170,28 @@ for f in "${approxQueue[@]}"; do
       if [[ "$fRate" == "0" ]]; then
         found=1
         errNew=$(bash ./scripts/checkErr.sh $1 replaced $5 $6)
+        deg=$_deg
         # update IRB state
+        cp temp/temp_"$f".c temp/temp_"$f"_old.c
         cp temp/replaced.ll temp/$1_replaced_tmp.ll
         break
       fi
     fi
-    (( deg++ ))
+    (( _deg++ ))
   done
 done
 
-if [[ $deg == 28 ]]; then
+if [[ $_deg == 28 ]]; then
   deg=27
 fi
 
 if [[ $found == 0 ]]; then
-  echo "not found"
+  echo "PA is not found"
   echo "01" > temp/signal.txt
   exit 1
 fi
+
+cp temp/temp_"$f"_old.c temp/temp_"$f".c
 
 # update err_{new}
 # echo "degree = $deg"
