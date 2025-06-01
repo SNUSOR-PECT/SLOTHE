@@ -30,15 +30,7 @@ struct Unreachable : public llvm::PassInfoMixin<Unreachable> {
     public:
         explicit Unreachable(llvm::raw_ostream &OutS) : OS(OutS) {}
         
-        uint32_t getConstantVal(llvm::Value* val);
-        llvm::Value* getOperandFromCondition(llvm::Value* Cond, size_t pos);
-        bool isConditionHighwordofInput(llvm::Value* Cond);
-
-        bool isSpecialBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst);
-        bool isSubNormalBranch(llvm::BasicBlock* BB, llvm::BranchInst *brInst);
-        bool isExactZero(llvm::BasicBlock* BB, llvm::BranchInst *brInst);
-
-        llvm::PreservedAnalyses run(llvm::Function &F, llvm::FunctionAnalysisManager &);
+        llvm::PreservedAnalyses run(llvm::Function &F, llvm::FunctionAnalysisManager &FM);
 
         static bool isRequired() { return true; }
 

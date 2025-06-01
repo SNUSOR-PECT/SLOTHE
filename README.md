@@ -1,7 +1,12 @@
 SLOTHE : Lazy Approximation of Non-Arithmetic Neural Network Functions over Encrypted Data
 =========
 
-based on **LLVM 16**
+
+## Requirements
+```
+llvm 16
+cmake >= 3.20
+```
 
 ### Build (We assume that llvm16 is installed at /usr/local)
 ```bash

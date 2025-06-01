@@ -104,8 +104,41 @@ int isIEEESpecialValBranch(llvm::BasicBlock* BB, llvm::ICmpInst *I) {
   return 0;
 }
 
+
+double highXtoDouble(uint32_t val) {
+  uint64_t tmp = (static_cast<uint64_t>(val) << 32);  // low word assumed to be 0
+  double res;
+  std::memcpy(&res, &tmp, sizeof(res));
+  return res;
+}
+
+// x in range : _min < x < _max
+int checkValidRange(llvm::ICmpInst *I) {
+  using Pred = llvm::ICmpInst::Predicate;
+
+  Value *RHS = I->getOperand(1);
+
+  if (auto *CI = llvm::dyn_cast<llvm::ConstantInt>(RHS)) {
+    int32_t sVal = CI->getSExtValue();
+    double dVal = highXtoDouble(sVal);
+
+    Pred pred = I->getPredicate();
+    if (ICmpInst::isLT(pred) || ICmpInst::isLE(pred)) {
+      // |x| < dVal
+      if (dVal <= _min) return 0;     // always false
+      if (dVal > _max) return 1;      // always true
+    } else if (ICmpInst::isGT(pred) || ICmpInst::isGE(pred)) {
+      // |x| > dVal
+      if (dVal >= _max) return 0;     // always false
+      if (dVal < _min) return 1;      // always true
+    }
+  }
+
+  return -1; // both can be valid
+}
+
 PreservedAnalyses Unreachable::run(llvm::Function &Func,
-                                      llvm::FunctionAnalysisManager &) {
+                                      llvm::FunctionAnalysisManager &FM) {
   bool modified = false;
 
   for (auto &BB : Func) {
@@ -122,15 +155,35 @@ PreservedAnalyses Unreachable::run(llvm::Function &Func,
         case 3:
           brInst->setSuccessor(0, brInst->getSuccessor(1)); // always false
           modified = true;
-          errs() << "remove tag = " << tag << "\n";
+          continue;
         default:
           break;
       }
 
       // 2) check if the branch indicates unreachable path
-      // if (isHighAbsX(I->getOperand(0))) {
+      int isValid = checkValidRange(ICmp);
+      if (isValid == 0 || isValid == 1) {
+        BasicBlock *BBParent = brInst->getParent();
 
-      // }
+        unsigned removeIdx = isValid == 0 ? 0 : 1; // which successor is unreachable
+        unsigned keepIdx   = 1 - removeIdx;
+
+        BasicBlock *deadSucc = brInst->getSuccessor(removeIdx);
+        BasicBlock *liveSucc = brInst->getSuccessor(keepIdx);
+
+        // Redirect branch to always go to the live successor
+        brInst->setSuccessor(0, liveSucc);
+        brInst->setSuccessor(1, liveSucc);
+
+        // Update all phi nodes in the dead successor
+        for (Instruction &I : *deadSucc) {
+          if (auto *phi = dyn_cast<PHINode>(&I)) {
+            phi->removeIncomingValue(BBParent, false); // DeletePHIIfEmpty
+          }
+        }
+
+        modified = true;
+      }
     }
   }
 

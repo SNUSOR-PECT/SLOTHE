@@ -1,13 +1,13 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 <NAF>"
+if [ "$#" -ne 3 ]; then
+  echo "Usage: $0 <NAF> <min> <max>"
   exit 1
 fi
 
 echo -e "[*] Apply UnreachablePath and SimplifyCFG pass on $1"
 
-/usr/local/bin/opt -load-pass-plugin ./build/lib/libUnreachable.so -passes=remove-unreachable,simplifycfg ./temp/_$1.ll -o ./temp/_$1_Unreachable.bc
+/usr/local/bin/opt -load-pass-plugin ./build/lib/libUnreachable.so -passes=remove-unreachable,simplifycfg -val-min=$2 -val-max=$3 ./temp/_$1.ll -o ./temp/_$1_Unreachable.bc
 /usr/local/bin/llvm-dis ./temp/_$1_Unreachable.bc
 
 /usr/local/bin/opt -load-pass-plugin ./build/lib/libUnreachable.so -passes=dot-cfg -disable-output ./temp/_$1_Unreachable.ll
