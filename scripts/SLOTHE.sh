@@ -19,6 +19,7 @@ mkdir -p fba_pool
 declare -A NAF
 NAF[tanh]='tanh(x)'
 NAF[gelu]='x/2*(1+erf(x/sqrt(2)))'
+NAF[swish]='x/(exp(-x)+1)'
 
 precLim="1e-$2"
 /usr/local/bin/clang++ ./utils/checkPrecVal.cpp -o checkPrecVal -lm

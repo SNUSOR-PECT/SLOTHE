@@ -21,7 +21,12 @@ using namespace llvm;
 //------------------------------------------------------------------------------
 // Util functions
 //------------------------------------------------------------------------------
-
+static cl::opt<std::string> TargetFunc(
+    "target-func",
+    cl::desc("Target function name"),
+    cl::value_desc("function name"),
+    cl::init("")
+);
 
 //------------------------------------------------------------------------------
 // Crucial functions
@@ -29,7 +34,7 @@ using namespace llvm;
 
 PreservedAnalyses CountCond::run(llvm::Function &Func,
                                       llvm::FunctionAnalysisManager &) {
-  
+  if (Func.getName() == TargetFunc) {
     int cnt = 0;
     for (auto &BB : Func) {
         auto term = BB.getTerminator(); 
@@ -41,6 +46,9 @@ PreservedAnalyses CountCond::run(llvm::Function &Func,
     }
 
     errs() << cnt << "\n";
+
+    return llvm::PreservedAnalyses::all();
+  }
 
   return llvm::PreservedAnalyses::all();
 }

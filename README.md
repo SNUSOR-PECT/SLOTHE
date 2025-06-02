@@ -4,8 +4,14 @@ SLOTHE : Lazy Approximation of Non-Arithmetic Neural Network Functions over Encr
 
 ## Requirements
 ```
+C++17 (11.4.0)
 llvm 16
 cmake >= 3.20
+```
+
+## Software Dependencies
+```
+lolremez 0.7
 ```
 
 ### Build (We assume that llvm16 is installed at /usr/local)
@@ -18,10 +24,14 @@ bash ./scripts/build.sh
 # bash ./scripts/SLOTHE.sh <NAF> <precision> <time> <min> <max> 
 # if "minErr", <precision> is not used
 # if "minTime", <time> is not used
-bash ./scripts/SLOTHE.sh gelu 2 40 -8 8 "minErr" 50
+# Tanh
 bash ./scripts/SLOTHE.sh tanh 3 40 -4 4 "minErr" 50
 bash ./scripts/SLOTHE.sh tanh 4 900 -4 4 "minErr" 50
 bash ./scripts/SLOTHE.sh tanh 3 40 -4 4 "minTime" 50
+# Gelu
+bash ./scripts/SLOTHE.sh gelu 2 40 -8 8 "minErr" 50
+# Swish
+bash ./scripts/SLOTHE.sh swish 2 40 -8 8 "minErr" 40
 ```
 
 ### Clean all generated temporal files

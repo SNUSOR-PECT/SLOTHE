@@ -15,7 +15,7 @@ out=$(bash ./scripts/baseline.sh $1 2>&1)
 cnt=$(echo "$out" | grep -x '[0-9]\+')
 # echo "cnt = $cnt"
 
-if [[ "$cnt" != "0" ]]; then
+if [[ $cnt != 0 ]]; then
   echo "[*] $1 has condition clauses, run CF-optimizer"
 
   # 2. CF-Optimizer (1) Unrechable path elimination

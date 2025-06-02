@@ -11,6 +11,8 @@ NAF[tanh]='tanh(x)'
 NAF[gelu]='x/2*(1+erf(x/sqrt(2)))'
 NAF[erf]='erf(x)'
 NAF[expm1]='expm1(x)'
+NAF[swish]='x/(exp(-x)+1)'
+NAF[exp]='exp(x)'
 
 # 0. Op-Analyzer (1) replace constant fdiv into fmul
 /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceDivtoMul.so -passes=replace-div-mul,dce -S $2 -o temp/$1_tmp.ll
@@ -97,6 +99,7 @@ for f in "${approxQueue[@]}"; do
   /usr/local/bin/llc -filetype=obj temp/temp_$f.ll -o temp_$f.o
   /usr/local/bin/clang++ ./utils/checkMax.cpp temp_$f.o -o checkMax -lm
   fMax=$(./checkMax _$1 $5 $6)
+  rm -rf *.o checkMax
   # echo "function $f, ($5, $6) fMax : $fMax"
 
   found=0
@@ -234,5 +237,3 @@ else
     cp temp/$1_cand_$subF.ll fba_pool/$1_cand_$subF.ll
   done
 fi
-
-rm -rf *.o checkMax
