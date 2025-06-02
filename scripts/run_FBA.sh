@@ -16,11 +16,11 @@ NAF[sigmoid]='1/(exp(-x)+1)'
 NAF[exp]='exp(x)'
 
 # 0. Op-Analyzer (1) replace constant fdiv into fmul
-/usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceDivtoMul.so -passes=replace-div-mul,dce -S $2 -o temp/$1_tmp.ll
+/usr/bin/opt-16 -load-pass-plugin ./build/lib/libReplaceDivtoMul.so -passes=replace-div-mul,dce -S $2 -o temp/$1_tmp.ll
 
 # 1. Op-Analyzer (2) build approximation queue
-# approxQueue=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -target-func=_"$1" -S -disable-output temp/$1_tmp.ll 2>&1))
-approxQueue=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -S -disable-output temp/$1_tmp.ll 2>&1))
+# approxQueue=($(/usr/bin/opt-16 -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -target-func=_"$1" -S -disable-output temp/$1_tmp.ll 2>&1))
+approxQueue=($(/usr/bin/opt-16 -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -S -disable-output temp/$1_tmp.ll 2>&1))
 
 # for f in "${approxQueue[@]}"; do
 #   echo "f = $f"
@@ -28,30 +28,30 @@ approxQueue=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so
 
 # 2. run PAG for AQ (Division)
 isExistDiv=$(
-  /usr/local/bin/opt -load-pass-plugin ./build/lib/libGetDivisorRange.so \
+  /usr/bin/opt-16 -load-pass-plugin ./build/lib/libGetDivisorRange.so \
     -passes=get-div-range,dce -target-func=_"$1" -S \
     -o temp/$1_tmp_div.ll temp/$1_tmp.ll 2>&1
 )
 
 if [[ $isExistDiv == "1" ]]; then
-  /usr/local/bin/llc -filetype=obj temp/$1_tmp_div.ll -o $1_tmp_div.o
-  /usr/local/bin/clang++ ./utils/checkMax.cpp $1_tmp_div.o -o checkMax -lm
+  /usr/bin/llc-16 -filetype=obj temp/$1_tmp_div.ll -o $1_tmp_div.o
+  /usr/bin/clang++-16 ./utils/checkMax.cpp $1_tmp_div.o -o checkMax -lm
   divMax=$(./checkMax _$1 $5 $6)
   # echo "divMax : $divMax"
 
   # 6. compile approximated divide (inverse)
-  /usr/local/bin/clang -O2 -c -emit-llvm math/_inverse.c -o temp/_inverse.bc
-  /usr/local/bin/llvm-dis temp/_inverse.bc
-  /usr/local/bin/opt -disable-output temp/_inverse.ll
+  /usr/bin/clang-16 -O2 -c -emit-llvm math/_inverse.c -o temp/_inverse.bc
+  /usr/bin/llvm-dis-16 temp/_inverse.bc
+  /usr/bin/opt-16 -disable-output temp/_inverse.ll
 
   # 7. link top function and approximated polynomial
-  /usr/local/bin/llvm-link temp/$1_tmp.ll temp/_inverse.ll -S -o temp/merged_div_$1.ll
+  /usr/bin/llvm-link-16 temp/$1_tmp.ll temp/_inverse.ll -S -o temp/merged_div_$1.ll
 
   found2=0
   expNum=$(tail -c 2 temp/errPrev.txt | head -c 1)
   for d in $(seq 11 1 17); do
     # 8. run ReplaceDiv pass
-    /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceDiv.so -passes=replace-div,dce -div-max=$divMax -iter-d=$d -S -o temp/temp_div_$1.ll temp/merged_div_$1.ll
+    /usr/bin/opt-16 -load-pass-plugin ./build/lib/libReplaceDiv.so -passes=replace-div,dce -div-max=$divMax -iter-d=$d -S -o temp/temp_div_$1.ll temp/merged_div_$1.ll
 
     # 5. check the validity of current approximated polynomial for sub-func
     tmp=$(bash ./scripts/checkValid.sh $1 temp_div_$1 $expNum $5 $6)
@@ -101,9 +101,9 @@ done
 for f in "${approxQueue[@]}"; do
 
   # 1. get input range of the sub-func $f
-  /usr/local/bin/opt -load-pass-plugin ./build/lib/libGetFuncRange.so -passes=get-func-range,dce -target-func=$f -S -o temp/temp_$f.ll temp/$1_tmp.ll
-  /usr/local/bin/llc -filetype=obj temp/temp_$f.ll -o temp_$f.o
-  /usr/local/bin/clang++ ./utils/checkMax.cpp temp_$f.o -o checkMax -lm
+  /usr/bin/opt-16 -load-pass-plugin ./build/lib/libGetFuncRange.so -passes=get-func-range,dce -target-func=$f -S -o temp/temp_$f.ll temp/$1_tmp.ll
+  /usr/bin/llc-16 -filetype=obj temp/temp_$f.ll -o temp_$f.o
+  /usr/bin/clang++-16 ./utils/checkMax.cpp temp_$f.o -o checkMax -lm
   fMax=$(./checkMax _$1 $5 $6)
   # echo "function $f, ($5, $6) fMax : $fMax"
 
@@ -124,13 +124,13 @@ for f in "${approxQueue[@]}"; do
     fi
 
     # 3. compile PA
-    /usr/local/bin/clang -O2 -c -emit-llvm temp/temp_$f.c -o temp/temp_$f.bc
-    /usr/local/bin/llvm-dis temp/temp_$f.bc
-    /usr/local/bin/opt -disable-output temp/temp_$f.ll
+    /usr/bin/clang-16 -O2 -c -emit-llvm temp/temp_$f.c -o temp/temp_$f.bc
+    /usr/bin/llvm-dis-16 temp/temp_$f.bc
+    /usr/bin/opt-16 -disable-output temp/temp_$f.ll
 
     # 4. New IRB structure of $2 by linking $2 and PA
-    /usr/local/bin/llvm-link temp/$1_tmp.ll temp/temp_$f.ll -S -o temp/merged.ll
-    /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceFunc.so -passes=replace-func,dce -source-func=$f -target-func=f -S -o temp/replaced.ll temp/merged.ll
+    /usr/bin/llvm-link-16 temp/$1_tmp.ll temp/temp_$f.ll -S -o temp/merged.ll
+    /usr/bin/opt-16 -load-pass-plugin ./build/lib/libReplaceFunc.so -passes=replace-func,dce -source-func=$f -target-func=f -S -o temp/replaced.ll temp/merged.ll
 
     # 5-1. (UDC-tracker) check the validity of current PA for sub-func (best option)
     if [[ $7 == "minErr" ]]; then
@@ -235,12 +235,12 @@ else
     # echo "subF = $subF"
     # (1) run cf-optimizer on $subF
     # bash ./scripts/cf_optimizer.sh $subF $3 $5 $6
-    /usr/local/bin/clang -O2 -c -emit-llvm ./math/_$subF.c -o ./temp/_"$subF"_optim.bc
-    /usr/local/bin/llvm-dis ./temp/_"$subF"_optim.bc
+    /usr/bin/clang-16 -O2 -c -emit-llvm ./math/_$subF.c -o ./temp/_"$subF"_optim.bc
+    /usr/bin/llvm-dis-16 ./temp/_"$subF"_optim.bc
 
     # (2) merge $1_tmp and optimized $subF
-    /usr/local/bin/llvm-link temp/$1_tmp.ll temp/_"$subF"_optim.ll -S -o temp/$1_tmp_$subF.ll
-    /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceFunc.so -passes=replace-func,dce -source-func=f -target-func=_$subF -S -o temp/$1_cand_$subF.ll temp/$1_tmp_$subF.ll
+    /usr/bin/llvm-link-16 temp/$1_tmp.ll temp/_"$subF"_optim.ll -S -o temp/$1_tmp_$subF.ll
+    /usr/bin/opt-16 -load-pass-plugin ./build/lib/libReplaceFunc.so -passes=replace-func,dce -source-func=f -target-func=_$subF -S -o temp/$1_cand_$subF.ll temp/$1_tmp_$subF.ll
 
     # (3) push $1_tmp+$subF merged IRB into fba_pool
     cp temp/$1_cand_$subF.ll fba_pool/$1_cand_$subF.ll

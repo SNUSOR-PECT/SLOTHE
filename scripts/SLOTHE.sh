@@ -23,7 +23,7 @@ NAF[swish]='x/(exp(-x)+1)'
 NAF[sigmoid]='1/(exp(-x)+1)'
 
 precLim="1e-$2"
-/usr/local/bin/clang++ ./utils/checkPrecVal.cpp -o checkPrecVal -lm
+/usr/bin/clang++-16 ./utils/checkPrecVal.cpp -o checkPrecVal -lm
 
 for (( _deg=10; _deg<=27; )); do
   # 2. run PAG with desired input range of subfunction
@@ -45,8 +45,8 @@ for (( _deg=10; _deg<=27; )); do
 
   if [[ $6 == "minErr" ]]; then
     # will choose the highest _deg
-    /usr/local/bin/clang -O2 -c -emit-llvm temp/temp_"$1".c -o temp/$1_tmp.bc
-    /usr/local/bin/llvm-dis temp/$1_tmp.bc
+    /usr/bin/clang-16 -O2 -c -emit-llvm temp/temp_"$1".c -o temp/$1_tmp.bc
+    /usr/bin/llvm-dis-16 temp/$1_tmp.bc
     condTime=$(bash ./scripts/checkTime.sh $1 $1_tmp $3)
     if [[ $condTime == "1" ]]; then
       # (( _deg-- )) # save prior IRB
@@ -60,8 +60,8 @@ for (( _deg=10; _deg<=27; )); do
   else
     # will choose the lowest _deg
     if (( $(echo "$dec_err < $dec_lim" | bc -l) )); then
-      /usr/local/bin/clang -O2 -c -emit-llvm temp/temp_"$1".c -o temp/$1_old.bc
-      /usr/local/bin/llvm-dis temp/$1_old.bc
+      /usr/bin/clang-16 -O2 -c -emit-llvm temp/temp_"$1".c -o temp/$1_old.bc
+      /usr/bin/llvm-dis-16 temp/$1_old.bc
       cp temp/temp_"$1".c temp/temp_"$1"_old.c
       deg=$_deg
       # echo "$maxerr < $precLim  →  target met"
@@ -98,7 +98,7 @@ while :; do
 
   # Heuristic cost estimation using CostEstimation pass
   for f in "${files[@]}"; do
-    costs=$(/usr/local/bin/opt -load-pass-plugin ./build/lib/libCostEstimation.so -passes=estimate-cost -S -disable-output $f 2>&1)
+    costs=$(/usr/bin/opt-16 -load-pass-plugin ./build/lib/libCostEstimation.so -passes=estimate-cost -S -disable-output $f 2>&1)
     cost=$(echo "$costs" | awk -F': ' '{sum+=$2} END {print sum}')
     if [[ -z $cost_target || $(awk -v a="$cost" -v b="$cost_target" \
                                   'BEGIN{exit (a<b)?0:1}') == 0 ]]; then
@@ -148,4 +148,4 @@ fi
 
 bash ./scripts/printResults.sh $1 results/$1_result.ll $4 $5
 
-rm -rf checkPrecVal
+rm -rf checkPrecVal checkMax

@@ -24,7 +24,6 @@ if [[ $cnt != 0 ]]; then
   # 3. CF-Optimizer (2) Equivalent path merging
   # TODO: run pathMerge.sh until all branches are analyzed
   bash ./scripts/pathMerge.sh $1 _$1_Unreachable _$1_Merged $2
-  # bash ./scripts/pathMerge.sh $1 _$1_Merged1 _$1_Merged2 $2
 
   # 4. Check the validity of optimized IRB compared to initial IRB
   bash ./scripts/checkValid.sh $1 _$1_Merged $2 $3 $4
