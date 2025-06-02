@@ -176,6 +176,7 @@ void TimeEstimation::traceFunction(llvm::Function *Func, std::set<std::string> &
     for (auto &BB : *Func) {
         for (auto &I : BB) {
             if (I.getOpcode() == Instruction::Ret) break;
+            else if (I.getOpcode() == Instruction::FNeg) continue; // nearly no cost
             else if (auto *call = llvm::dyn_cast<llvm::CallInst>(&I)) {
                 if (llvm::Function *callee = call->getCalledFunction()) {
                     if (callee->getName() == "_inverse") {
@@ -218,10 +219,10 @@ void TimeEstimation::traceFunction(llvm::Function *Func, std::set<std::string> &
                 }
             } 
             else {
-                Value *op0 = I.getOperand(0);
-                Value *op1 = I.getOperand(1);
-                
                 if (isDerivedFrom(&I, input)) {
+                    Value *op0 = I.getOperand(0);
+                    Value *op1 = I.getOperand(1);
+
                     if (llvm::isa<llvm::Constant>(op1)) {
                         // PMult or PAdd
                         int opL = getDepth(op0, input)+lvl4Funcs;

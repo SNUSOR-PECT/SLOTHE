@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(llvm-pass)
+project(SLOTHE)
 
 #===============================================================================
 # 1. VERIFY LLVM INSTALLATION DIR

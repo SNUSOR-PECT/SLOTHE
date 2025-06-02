@@ -1,7 +1,6 @@
 # THE LIST OF PLUGINS AND THE CORRESPONDING SOURCE FILES
 # ======================================================
 set(LLVM_PLUGINS
-    BasicTrace
     CountCond
     CostEstimation
     TimeEstimation
@@ -16,9 +15,6 @@ set(LLVM_PLUGINS
     GetDivisorRange
     )
 
-set(BasicTrace_SOURCES
-  BasicTrace.cpp
-  )
 set(CountCond_SOURCES
   CountCond.cpp
   )
