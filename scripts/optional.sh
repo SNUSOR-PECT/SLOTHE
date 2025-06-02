@@ -13,8 +13,8 @@ fi
 # Re-compile
 /usr/bin/opt-16 -O2 ./temp/$3.ll -S -o ./temp/$3.ll
 /usr/bin/opt-16 -passes=dot-cfg -disable-output ./temp/$3.ll
-dot -Tpng -o ./results/_$3.png ./._$1.dot
-# if dot -Tpng -o ./results/_$3.png ./._$1.dot;then
+/usr/bin/dot -Tpng -o ./results/_$3.png ./._$1.dot
+# if /usr/bin/dot -Tpng -o ./results/_$3.png ./._$1.dot;then
 #     echo -e "\n[*] A new CFG is drawn at ./results/_$3.png!"
 # else
 #     echo -e "\n[*] Fail to draw a new CFG :("

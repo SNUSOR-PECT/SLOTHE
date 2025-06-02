@@ -7,9 +7,11 @@ SLOTHE : Lazy Approximation of Non-Arithmetic Neural Network Functions over Encr
 
 ## Requirements
 ```
-C++17 (gcc 11.4.0)
-llvm 16
 cmake >= 3.20
+c++17 (gcc 11.4.0)
+llvm 16
+graphviz
+git
 ```
 
 ## Software Dependencies
@@ -23,7 +25,7 @@ If you use docker image, you could pass this script.
 sudo bash ./scripts/install.sh
 ```
 
-### Build (We assume that llvm16 is installed at /usr/local)
+### Build
 ```bash
 bash ./scripts/build.sh
 ```
