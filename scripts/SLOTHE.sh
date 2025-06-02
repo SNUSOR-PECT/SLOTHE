@@ -20,6 +20,7 @@ declare -A NAF
 NAF[tanh]='tanh(x)'
 NAF[gelu]='x/2*(1+erf(x/sqrt(2)))'
 NAF[swish]='x/(exp(-x)+1)'
+NAF[sigmoid]='1/(exp(-x)+1)'
 
 precLim="1e-$2"
 /usr/local/bin/clang++ ./utils/checkPrecVal.cpp -o checkPrecVal -lm
@@ -76,7 +77,7 @@ if [[ $_deg == 28 ]]; then
 fi
 
 # echo "deg = $deg, maxerr = $maxerr"
-cp temp/temp_"$f"_old.c temp/temp_"$f".c
+cp temp/temp_"$1"_old.c temp/temp_"$1".c
 echo "$maxerr" > temp/errPrev.txt
 
 # 1. run CF-optimizer on $1 -> output name is $1_optim.ll
@@ -110,7 +111,7 @@ while :; do
 
   # run FBA on target (IRB_{tmp} = $IRB_target)
   cp $IRB_target ./temp/$1_tmp.ll
-  bash ./scripts/run_FBA.sh $1 ./temp/$1_tmp.ll $2 $3 $4 $5 $6 $7
+  bash ./scripts/run_FBA.sh $1 ./temp/$1_tmp.ll $2 $3 $4 $5 $6 $7 
 
   # Signal [00] return IRB_{old}
   # Signal [01] keep IRB_{old} and select next IRB

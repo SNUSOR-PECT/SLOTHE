@@ -30,7 +30,7 @@ bash ./scripts/build.sh
 
 ### Run SLOTHE on NAF
 ```bash
-# bash ./scripts/SLOTHE.sh <NAF> <precision> <time> <min> <max> 
+# bash ./scripts/SLOTHE.sh <NAF> <precision> <time> <min> <max> <Mode> <HE-precision>
 # if "minErr", <precision> is not used
 # if "minTime", <time> is not used
 # Tanh

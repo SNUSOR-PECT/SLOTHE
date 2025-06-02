@@ -12,13 +12,19 @@ NAF[gelu]='x/2*(1+erf(x/sqrt(2)))'
 NAF[erf]='erf(x)'
 NAF[expm1]='expm1(x)'
 NAF[swish]='x/(exp(-x)+1)'
+NAF[sigmoid]='1/(exp(-x)+1)'
 NAF[exp]='exp(x)'
 
 # 0. Op-Analyzer (1) replace constant fdiv into fmul
 /usr/local/bin/opt -load-pass-plugin ./build/lib/libReplaceDivtoMul.so -passes=replace-div-mul,dce -S $2 -o temp/$1_tmp.ll
 
 # 1. Op-Analyzer (2) build approximation queue
+# approxQueue=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -target-func=_"$1" -S -disable-output temp/$1_tmp.ll 2>&1))
 approxQueue=($(/usr/local/bin/opt -load-pass-plugin ./build/lib/libOpAnalyzer.so -passes=analyze-op,dce -S -disable-output temp/$1_tmp.ll 2>&1))
+
+# for f in "${approxQueue[@]}"; do
+#   echo "f = $f"
+# done
 
 # 2. run PAG for AQ (Division)
 isExistDiv=$(
@@ -99,23 +105,23 @@ for f in "${approxQueue[@]}"; do
   /usr/local/bin/llc -filetype=obj temp/temp_$f.ll -o temp_$f.o
   /usr/local/bin/clang++ ./utils/checkMax.cpp temp_$f.o -o checkMax -lm
   fMax=$(./checkMax _$1 $5 $6)
-  rm -rf *.o checkMax
   # echo "function $f, ($5, $6) fMax : $fMax"
 
   found=0
   read -r errPrevTop < temp/errPrev.txt
   _errPrevTop=$(printf "%.10f" "$errPrevTop")
+  
   for (( _deg=10; _deg<=27; )); do
     # 2. run PAG with desired input range of subfunction
     lolremez --double -r "-$fMax:$fMax" "${NAF[$f]}" -d $_deg > temp/temp_$f.c
 
     # check if the coeff can be encoded
-  pval=$(./checkPrecVal temp/temp_$f.c $8)
-  # echo "deg=$_deg, coeff can be represented? $pval"
-  if [[ $pval == "0" ]]; then
-    (( _deg++ ))
-    continue
-  fi
+    pval=$(./checkPrecVal temp/temp_$f.c $8)
+    # echo "deg=$_deg, coeff can be represented? $pval"
+    if [[ $pval == "0" ]]; then
+      (( _deg++ ))
+      continue
+    fi
 
     # 3. compile PA
     /usr/local/bin/clang -O2 -c -emit-llvm temp/temp_$f.c -o temp/temp_$f.bc
@@ -128,18 +134,19 @@ for f in "${approxQueue[@]}"; do
 
     # 5-1. (UDC-tracker) check the validity of current PA for sub-func (best option)
     if [[ $7 == "minErr" ]]; then
-      condTime=$( bash ./scripts/checkTime.sh $1 replaced $4)
+      condTime=$(bash ./scripts/checkTime.sh $1 replaced $4)
 
       errNew=$(bash ./scripts/checkErr.sh $1 replaced $5 $6)
       _errNew=$(printf "%.10f" "$errNew")
       _errPrev=$(printf "%.10f" "$errPrev")
 
       # new IRB should have better error than previous IRB
-      # echo "  $_errPrevTop >= $_errNew"
+      # echo "_deg=$_deg, saved deg=$deg |  $_errPrevTop >= $_errNew ($(echo "$_errPrevTop >= $_errNew" | bc -l)) | $condTime, $found"
       if (( $(echo "$_errPrevTop >= $_errNew" | bc -l) )); then
 
         # check if time is not met
         if [[ $condTime == "1" ]]; then
+          # echo "--- Time not met & break ---"
           errNew=$errPrev
           deg=$_deg-1
           # (( _deg-- )) # keep prior IRB (temp/$1_tmp.ll)
@@ -147,14 +154,15 @@ for f in "${approxQueue[@]}"; do
         fi
 
         if [[ $found == 0 ]]; then
+        # echo "--- Time met ---"
           # update
           errPrev=$errNew
           found=1
           deg=$_deg
           cp temp/temp_"$f".c temp/temp_"$f"_old.c
           cp temp/replaced.ll temp/$1_replaced_tmp.ll
-          (( _deg++ ))
-          continue
+          # (( _deg++ ))
+          # continue
         fi
 
         # check if err is not better than the previous replaced, save the prior IRB
@@ -189,7 +197,7 @@ if [[ $_deg == 28 ]]; then
 fi
 
 if [[ $found == 0 ]]; then
-  echo "PA is not found"
+  echo "[*] PA is not found"
   echo "01" > temp/signal.txt
   exit 1
 fi
@@ -224,8 +232,9 @@ else
   echo "02" > temp/signal.txt
 
   for subF in "${approxQueue[@]}"; do
+    # echo "subF = $subF"
     # (1) run cf-optimizer on $subF
-    # bash ./scripts/cf_optimizer.sh $subF $2 $4 $5
+    # bash ./scripts/cf_optimizer.sh $subF $3 $5 $6
     /usr/local/bin/clang -O2 -c -emit-llvm ./math/_$subF.c -o ./temp/_"$subF"_optim.bc
     /usr/local/bin/llvm-dis ./temp/_"$subF"_optim.bc
 
