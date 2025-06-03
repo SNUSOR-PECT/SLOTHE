@@ -54,7 +54,7 @@ if [[ $isExistDiv == "1" ]]; then
     /usr/bin/opt-16 -load-pass-plugin ./build/lib/libReplaceDiv.so -passes=replace-div,dce -div-max=$divMax -iter-d=$d -S -o temp/temp_div_$1.ll temp/merged_div_$1.ll
 
     # 5. check the validity of current approximated polynomial for sub-func
-    tmp=$(bash ./scripts/checkValid.sh $1 temp_div_$1 $expNum $5 $6)
+    tmp=$(bash ./scripts/checkFunctionalValid.sh $1 temp_div_$1 $expNum $5 $6)
     fRate2=$(echo "$tmp" | awk '{print $4}' | tr -d '%')
     if [[ "$fRate2" == "0" ]]; then
         # echo "Minimum d = $d"
@@ -176,7 +176,7 @@ for f in "${approxQueue[@]}"; do
 
     else # $7 == "minTime"
       # run checkErr
-      condErr=$(bash ./scripts/checkValid.sh $1 replaced $3 $5 $6)
+      condErr=$(bash ./scripts/checkFunctionalValid.sh $1 replaced $3 $5 $6)
       fRate=$(echo "$condErr" | awk '{print $4}' | tr -d '%')
       if [[ "$fRate" == "0" ]]; then
         found=1

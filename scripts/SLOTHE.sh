@@ -64,6 +64,7 @@ for (( _deg=10; _deg<=27; )); do
       /usr/bin/llvm-dis-16 temp/$1_old.bc
       cp temp/temp_"$1".c temp/temp_"$1"_old.c
       deg=$_deg
+      minTimeFound=1
       # echo "$maxerr < $precLim  →  target met"
       break
     fi
@@ -74,6 +75,14 @@ done
 
 if [[ $_deg == 28 ]]; then
   deg=27
+fi
+
+if [[ $6 == "minTime" && $minTimeFound == 1 ]]; then
+  cp temp/$1_old.ll results/$1_result.ll
+  cp temp/temp_"$1".c results/temp_"$1".c
+  echo "[*] Result is saved at results/$1_result.ll ."
+  bash ./scripts/printResults.sh $1 results/$1_result.ll $4 $5
+  exit 1
 fi
 
 # echo "deg = $deg, maxerr = $maxerr"
@@ -111,7 +120,7 @@ while :; do
 
   # run FBA on target (IRB_{tmp} = $IRB_target)
   cp $IRB_target ./temp/$1_tmp.ll
-  bash ./scripts/run_FBA.sh $1 ./temp/$1_tmp.ll $2 $3 $4 $5 $6 $7 
+  bash ./scripts/FBA.sh $1 ./temp/$1_tmp.ll $2 $3 $4 $5 $6 $7 
 
   # Signal [00] return IRB_{old}
   # Signal [01] keep IRB_{old} and select next IRB

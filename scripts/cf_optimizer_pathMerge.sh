@@ -6,8 +6,8 @@ if [ "$#" -ne 4 ]; then
 fi
 
 # Apply Mergeable and SimplifyCFG pass
-echo -e "[*] Apply Mergeable and SimplifyCFG pass on $1"
-/usr/bin/opt-16 -load-pass-plugin ./build/lib/libMergeable.so -passes=find-mergeable,simplifycfg ./temp/$2.ll -o ./temp/$2_swapped.bc
+echo -e "[*] Apply Swap and SimplifyCFG pass on $1"
+/usr/bin/opt-16 -load-pass-plugin ./build/lib/libSwap.so -passes=swap-path,simplifycfg ./temp/$2.ll -o ./temp/$2_swapped.bc
 /usr/bin/llvm-dis-16 ./temp/$2_swapped.bc
 
 # Generate T0.txt and F1.txt
@@ -28,7 +28,7 @@ isMergeable=$(./isMergeable $4)
 # echo "isMergeable? : $isMergeable"
 
 if [ "$isMergeable" -eq 0 ] || [ "$isMergeable" -eq 1 ];then
-    echo -e "[*] Apply Merge and SimplifyCFG pass on $1"
+    echo -e "[*] Apply Swap and SimplifyCFG pass on $1"
     /usr/bin/opt-16 -load-pass-plugin ./build/lib/libMerge.so -passes=merge-path,simplifycfg -merge-direction=$isMergeable ./temp/$2.ll -o ./temp/$3.bc
     /usr/bin/llvm-dis-16 ./temp/$3.bc
     

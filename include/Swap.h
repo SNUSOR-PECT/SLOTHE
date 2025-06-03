@@ -1,16 +1,16 @@
 //==============================================================================
 // FILE:
-//    Mergeable.h
+//    Swap.h
 //
 // DESCRIPTION:
-//    Declares the Mergeable Passes:
+//    Declares the Swap Passes:
 //      * new pass manager interface
 //      * printer pass for the new pass manager
 //
 // License: MIT
 //==============================================================================
-#ifndef LLVM_TUTOR_Mergeable_H
-#define LLVM_TUTOR_Mergeable_H
+#ifndef LLVM_TUTOR_Swap_H
+#define LLVM_TUTOR_Swap_H
 
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/Instructions.h"
@@ -26,9 +26,9 @@
 // New PM interface
 //------------------------------------------------------------------------------
 
-struct Mergeable : public llvm::PassInfoMixin<Mergeable> {
+struct Swap : public llvm::PassInfoMixin<Swap> {
     public:
-        explicit Mergeable(llvm::raw_ostream &OutS) : OS(OutS) {}
+        explicit Swap(llvm::raw_ostream &OutS) : OS(OutS) {}
         
         llvm::PreservedAnalyses run(llvm::Function &F, llvm::FunctionAnalysisManager &);
 

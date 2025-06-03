@@ -1,4 +1,4 @@
-#include "Mergeable.h"
+#include "Swap.h"
 
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
@@ -15,7 +15,7 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "find-mergeable"
+#define DEBUG_TYPE "swap-path"
 
 //------------------------------------------------------------------------------
 // Util functions
@@ -26,7 +26,7 @@ using namespace llvm;
 // Crucial functions
 //------------------------------------------------------------------------------
 
-PreservedAnalyses Mergeable::run(llvm::Function &Func,
+PreservedAnalyses Swap::run(llvm::Function &Func,
                                       llvm::FunctionAnalysisManager &) {
   
   for (auto &BB : llvm::reverse(Func)) {
@@ -57,14 +57,14 @@ PreservedAnalyses Mergeable::run(llvm::Function &Func,
 //-----------------------------------------------------------------------------
 // New PM Registration
 //-----------------------------------------------------------------------------
-llvm::PassPluginLibraryInfo getMergeablePluginInfo() {
-  return {LLVM_PLUGIN_API_VERSION, "find-mergeable", LLVM_VERSION_STRING,
+llvm::PassPluginLibraryInfo getSwapPluginInfo() {
+  return {LLVM_PLUGIN_API_VERSION, "swap-path", LLVM_VERSION_STRING,
           [](PassBuilder &PB) {
             PB.registerPipelineParsingCallback(
                 [](StringRef Name, FunctionPassManager &FPM,
                    ArrayRef<PassBuilder::PipelineElement>) {
-                  if (Name == "find-mergeable") {
-                    FPM.addPass(Mergeable(llvm::errs()));
+                  if (Name == "swap-path") {
+                    FPM.addPass(Swap(llvm::errs()));
                     return true;
                   }
                   return false;
@@ -74,5 +74,5 @@ llvm::PassPluginLibraryInfo getMergeablePluginInfo() {
 
 extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
 llvmGetPassPluginInfo() {
-  return getMergeablePluginInfo();
+  return getSwapPluginInfo();
 }

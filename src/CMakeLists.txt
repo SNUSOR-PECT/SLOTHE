@@ -5,7 +5,7 @@ set(LLVM_PLUGINS
     CostEstimation
     TimeEstimation
     Unreachable
-    Mergeable
+    Swap
     Merge
     OpAnalyzer
     GetFuncRange
@@ -27,8 +27,8 @@ set(TimeEstimation_SOURCES
 set(Unreachable_SOURCES
   Unreachable.cpp
   )
-set(Mergeable_SOURCES
-  Mergeable.cpp
+set(Swap_SOURCES
+  Swap.cpp
   )
 set(Merge_SOURCES
   Merge.cpp

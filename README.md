@@ -30,25 +30,7 @@ sudo bash ./scripts/install.sh
 bash ./scripts/build.sh
 ```
 
-### Run SLOTHE on NAF
+### Run SLOTHE examples on NAF
 ```bash
-# bash ./scripts/SLOTHE.sh <NAF> <precision> <time> <min> <max> <Mode> <HE-precision>
-# if "minErr", <precision> is not used
-# if "minTime", <time> is not used
-# Tanh
-bash ./scripts/SLOTHE.sh tanh 3 40 -4 4 "minErr" 50
-bash ./scripts/SLOTHE.sh tanh 4 900 -4 4 "minErr" 50
-bash ./scripts/SLOTHE.sh tanh 3 40 -4 4 "minTime" 50
-# Gelu
-bash ./scripts/SLOTHE.sh gelu 2 40 -8 8 "minErr" 50
-bash ./scripts/SLOTHE.sh gelu 2 50 -8 8 "minErr" 50
-# Swish
-bash ./scripts/SLOTHE.sh swish 2 40 -8 8 "minErr" 50
-bash ./scripts/SLOTHE.sh swish 2 50 -8 8 "minErr" 50
-```
-
-### Clean all generated temporal files
-This should be executed before running SLOTHE.sh.
-```bash
-bash ./scripts/clean.sh
+bash ./scripts/run_examples.sh
 ```
