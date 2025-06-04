@@ -42,7 +42,7 @@ bash ./scripts/run_examples.sh
 
 ### Basic Description
 
-- `math` folder : includes the C source codes of the NAFs. We leave references (such as glibc). Some are the auto-generated C codes for backends from the Python codes in PyTorch (e.g., ReLU).
+- `math` folder : includes the C source codes of the NAFs used in our work gathered from the backends used when running PyTorch such as Eigen (which in turn calls glibc) and the auto-generated C codes for backends from Python (e.g., ReLU). We leave references of the glibc codes.
 - `results` folder : refers to the folder where the (intermediate) results will be stored once you run the code. The default IRB will be saved as png file (named only with the NAF name), visualizing the IRB structure. Unreacheable, merged, and optim refers to the IRB strcuture images optimized by the CF-Optimizer. The file named with result, since it is the final one, will be saved as `ll` format (LLVM's platform-agnostic assembly language) which is the final result of SLOTHE (the optimized IRB after FBA).
 - `scripts`, `src`, and `utils` folder include the running shell, cpp codes and other miscellaneous files used during SLOTHE.
 - The intermediate results' `ll` files and other temporary files will be stored in a temporary folder `temp` but they are cleaned (deleted) once you run `clean.sh`.
