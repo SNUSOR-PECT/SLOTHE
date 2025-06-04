@@ -35,7 +35,7 @@ bash ./scripts/build.sh
 ```
 
 ### Run SLOTHE examples on NAF
-The command below runs examples of SLOTHE with results (predicted latency and error) shown in the cmd promt lines.
+The command below runs examples of SLOTHE with results (predicted latency and error) shown in the cmd prompt lines.
 ```bash
 bash ./scripts/run_examples.sh
 ```
