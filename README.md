@@ -1,9 +1,8 @@
 SLOTHE : Lazy Approximation of Non-Arithmetic Neural Network Functions over Encrypted Data
 =========
 
-## Environment
-* CPU: Intel Xeon W5-2465X (16 cores / 32 threads)
-* OS: Ubuntu 22.04
+## Summary
+This repository provides the implementation codes of 'SLOTHE : Lazy Approximation of Non-Arithmetic Neural Network Functions over Encrypted Data'.
 
 ## Requirements
 ```
@@ -13,6 +12,10 @@ llvm 16
 graphviz
 git
 ```
+
+## Tested Environment (guaranteed to run on)
+* CPU: Intel Xeon W5-2465X (16 cores / 32 threads)
+* OS: Ubuntu 22.04
 
 ## Software Dependencies
 ```
