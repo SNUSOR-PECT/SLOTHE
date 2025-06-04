@@ -12,6 +12,7 @@ set(LLVM_PLUGINS
     ReplaceFunc
     ReplaceDivtoMul
     ReplaceDiv
+    ReplaceIcmp
     GetDivisorRange
     )
 
@@ -47,6 +48,9 @@ set(ReplaceDivtoMul_SOURCES
   )
 set(ReplaceDiv_SOURCES
   ReplaceDiv.cpp
+  )
+set(ReplaceIcmp_SOURCES
+  ReplaceIcmp.cpp
   )
 set(GetDivisorRange_SOURCES
   GetDivisorRange.cpp
