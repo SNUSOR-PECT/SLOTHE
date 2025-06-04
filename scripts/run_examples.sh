@@ -9,6 +9,8 @@ echo "    1) Run Tanh T-40"
 echo "    2) Run Tanh T-900"
 echo "    3) Run Gelu T-40"
 echo "    4) Run Gelu T-50"
+echo "    5) Run Sigmoid T-40"
+echo "    6) Run Sigmoid T-900"
 echo "    7) Run Tanh E-3"
 echo "    8) Run Tanh E-5"
 echo "    0) Clean files"
@@ -31,6 +33,14 @@ case "$choice" in
   4)
     echo "[*] Running Gelu T-50..."
     bash ./scripts/SLOTHE.sh gelu 2 50 -8 8 "minErr" 50
+    ;;
+  5)
+    echo "[*] Running Sigmoid T-40..."
+    bash ./scripts/SLOTHE.sh sigmoid 2 40 -5 5 "minErr" 50
+    ;;
+  6)
+    echo "[*] Running Sigmoid T-700..."
+    bash ./scripts/SLOTHE.sh sigmoid 2 700 -5 5 "minErr" 50
     ;;
   7)
     echo "[*] Running Tanh E-3..."
