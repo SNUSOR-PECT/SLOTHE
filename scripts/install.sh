@@ -6,10 +6,11 @@ set -e
 echo "[*] Installing dependencies for LLVM-based C++17 project"
 
 # --------- System Update ---------
-sudo apt update && sudo apt upgrade -y
+sudo apt update || true
+sudo apt upgrade -y --fix-missing || true
 
 # --------- Install Prerequisites ---------
-sudo apt install -y git wget curl build-essential software-properties-common gnupg lsb-release automake autoconf libtool pkg-config cmake graphviz
+sudo apt install -y git wget curl build-essential software-properties-common gnupg lsb-release automake autoconf libtool pkg-config cmake graphviz --fix-missing
 
 # --------- Install LLVM 16 ---------
 echo "[*] Installing LLVM 16..."

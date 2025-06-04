@@ -26,7 +26,19 @@ approxQueue=($(/usr/bin/opt-16 -load-pass-plugin ./build/lib/libOpAnalyzer.so -p
 #   echo "f = $f"
 # done
 
-# 2. run PAG for AQ (Division)
+# 2-1. run PAG for AQ (Comparison)
+isExistIcmp=$(/usr/bin/opt-16 -load-pass-plugin ./build/lib/libCountCond.so -passes=count-conditions -target-func=_$1 -disable-output ./temp/$1_tmp.ll 2>&1)
+
+if [[ $isExistIcmp != 0 ]]; then
+  /usr/bin/clang-16 -O2 -c -emit-llvm math/_icmp.c -o temp/_icmp.bc
+  /usr/bin/llvm-dis-16 temp/_icmp.bc
+
+  # link IRB and approximated icmp
+  /usr/bin/llvm-link-16 temp/$1_tmp.ll temp/_icmp.ll -S -o temp/merged_cmp_$1.ll
+  /usr/bin/opt-16 -load-pass-plugin ./build/lib/libReplaceIcmp.so -passes=replace-icmp,dce -target-func=_$1 -S -o temp/$1_tmp.ll temp/merged_cmp_$1.ll
+fi
+
+# 2-2. run PAG for AQ (Division)
 isExistDiv=$(
   /usr/bin/opt-16 -load-pass-plugin ./build/lib/libGetDivisorRange.so \
     -passes=get-div-range,dce -target-func=_"$1" -S \
@@ -97,7 +109,7 @@ for f in "${approxQueue[@]}"; do
   fi
 done
 
-# run PAG for each sub-func
+# 2-3. run PAG for AQ (for each sub-func)
 for f in "${approxQueue[@]}"; do
 
   # 1. get input range of the sub-func $f

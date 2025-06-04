@@ -194,6 +194,31 @@ void TimeEstimation::traceFunction(llvm::Function *Func, std::set<std::string> &
 
                         // (4) push operations
                         calInv(opL, d, opLvl);                        
+                    } else if (callee->getName() == "_icmp") {
+                        // (1) get d
+                        llvm::Value *op1 = call->getArgOperand(0);
+                        std::vector<int> degs = {15, 15, 27};
+
+                        // (2) get starting level
+                        int opL = getDepth(op1, input)+lvl4Funcs;
+
+                        // sub
+                        opLvl.push_back({"CAdd", opL});
+
+                        // (3) get required level for evaluating inverse
+                        for (std::size_t i=0; i<degs.size(); i++) {
+                            int reqLvl = ceil(log2(degs[i]))+1;
+                            lvl4Funcs += reqLvl;
+
+                            if ((bLvl-opL%bLvl) < reqLvl) {
+                                opLvl.push_back({"Btp", -1});
+                                opL += (bLvl-opL%bLvl);
+                            }
+
+                            // (5) push operations
+                            calPoly(opL, degs[i], opLvl);
+                        }
+                        opLvl.push_back({"PAdd", opL});
                     } else { // polynomial
                         // (1) get deg
                         int deg = 0;
