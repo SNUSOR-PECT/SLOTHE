@@ -31,6 +31,8 @@ static cl::opt<std::string> TargetFunc(
 // Crucial functions
 //------------------------------------------------------------------------------
 void replaceICmp(ICmpInst *ICmp) {
+  using Pred = llvm::ICmpInst::Predicate;
+
   Module *M = ICmp->getModule();
   IRBuilder<> builder(ICmp);
 
@@ -46,7 +48,12 @@ void replaceICmp(ICmpInst *ICmp) {
   FunctionCallee customICmp = M->getOrInsertFunction("_icmp", funcTy);
 
   // Replace the icmp with a call to _icmp(lhs, rhs)
-  Value *call = builder.CreateCall(customICmp, {lhs, rhs});
+  Value *call;
+  Pred pred = ICmp->getPredicate();
+  if (ICmpInst::isGT(pred) || ICmpInst::isGE(pred))
+    call = builder.CreateCall(customICmp, {lhs, rhs});
+  else
+    call = builder.CreateCall(customICmp, {rhs, lhs});
 
   // Replace all uses and erase the original instruction
   ICmp->replaceAllUsesWith(call);
