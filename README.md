@@ -3,7 +3,7 @@ SLOTHE : Lazy Approximation of Non-Arithmetic Neural Network Functions over Encr
 
 ## Summary
 This repository provides the implementation codes of 'SLOTHE : Lazy Approximation of Non-Arithmetic Neural Network Functions over Encrypted Data' which will be presented in USENIX Security 2025.
-The contents are identical with the Artifact in Zenodo.
+The contents are identical with the Artifact in [Zenodo](https://zenodo.org/records/15572278).
 
 ## Requirements
 ```
@@ -16,7 +16,9 @@ git
 
 ## Tested Environment (guaranteed to run on)
 * CPU: Intel Xeon W5-2465X (16 cores / 32 threads)
-* OS: Ubuntu 22.04
+* OS: Ubuntu 22.04 LTS
+
+Also tested on Virtual Machine with Ubuntu 22.04 LTS version -- DRAM: 16 GB / disk memory: 40 GB disk allocated (launched by VMware Workstation 17 from Windows 11)
 
 ## Software Dependencies
 ```
